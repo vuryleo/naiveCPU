@@ -1,6 +1,14 @@
 % File: intro.tex
-% Date: Mon Oct 28 00:10:22 2013 +0800
+% Date: Mon Oct 28 00:35:18 2013 +0800
 % Author: Yuxin Wu <ppwwyyxxc@gmail.com>
+
+\section{实验目的}
+\begin{enumerate}
+  \item 熟悉硬件描述语言及开发环境,了解硬件系统开发的基本过程
+  \item 掌握ALU基本设计方法和简单运算器的数据传送通路
+  \item 验证ALU的功能
+\end{enumerate}
+
 
 \section{实验工具及环境}
 \begin{description}
@@ -8,6 +16,30 @@
   \item[软件] Xilinx ISE 14.6
   \item[语言] Verilog
 \end{description}
+
+\section{实验原理}
+本实验内容是根据算术逻辑运算单元的功能表,通过状态机状态的变化,达到改变控制信号
+的组合的目的,从而实现不同的算术与逻辑运算功能,并将结果与标志位显示出
+来.实验中的ALU可以实现基本的算术运算、逻辑运算、移位运算等,功能如下表所示:
+
+\begin{table}[H]
+\begin{center}
+\begin{tabular}{|c|c|c|}
+\shline
+操作码 & 功能 & 描述\\ \shline
+ADD & A+B & 加法\\ \hline
+SUB & A-B & 减法\\ \hline
+AND & A and B & 与\\ \hline
+OR & A or B & 或\\ \hline
+XOR & A xor B & 异或\\ \hline
+NOT & not A & 非\\ \hline
+SLL & A sll B & 逻辑左移\\ \hline
+SRL & A sll B & 逻辑右移\\ \hline
+SRA & A sra B & 算术右移\\ \hline
+ROL & A rol B & 循环左移\\ \shline
+\end{tabular}
+\end{center}
+\end{table}
 
 \section{模块设计}
 顶层alu分为三个模块:
@@ -29,14 +61,31 @@
 通过修改代码输出Reset值, 发现Reset按下为0, 与代码期待行为相反, 因而实验平台一直处于Reset状态.
 
 之后的主要问题是不清楚平台上管脚高低位的对应顺序, 因此无法观测程序行为.
-做了几次小实验后清楚了平台设置, 再将原始代码烧入就完成了实验.
+做了几次小实验后清楚了平台设置, 再将原始代码烧入后行为便正常了.
+做了一些测试后均未出现问题, 于是结束实验.
 
 \section{经验及总结}
 这次实验总体比较简单, 我们在实验前期主要复习巩固了verilog语法,
-实验中在环境配置上出了些问题, 但也很快得到了解决.
+也熟悉了仿真软件的使用.
+经过仿真, 可以尽早消灭bug, 大大减少实验中的调试时间.
+
+实验中在环境配置上出了些问题, 但也很快通过虚拟机得到了解决.
 
 另外, 这次的实验, 我们将各部分功能进行了模块化设计,
 锻炼了初步的模块设计能力, 希望能为今后进一步的实验有所帮助.
+
+\section{思考题}
+\begin{enumerate}
+  \item ALU所使用的电路是组合逻辑电路还是时序逻辑电路?
+
+    组合逻辑电路
+
+  \item 如果给定了A和B的初值, 每次运算后都把结果写入B中再进行下次运算,
+    这样的一个带暂存功能的ALU要增加一些什么电路来实现?
+
+
+\end{enumerate}
+
 
 \section{实验代码}
 \versrc{src/inputState.v}
