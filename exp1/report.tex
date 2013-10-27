@@ -1,20 +1,12 @@
 % $File: report.tex
-% $Date: Mon Oct 28 00:17:32 2013 +0800
+% $Date: Mon Oct 28 00:38:12 2013 +0800
 % $Author: wyx <ppwwyyxxc@gmail.com>
 
 \documentclass[11pt,a4paper]{article}
-\usepackage{threeparttable}
-\usepackage{dirtree}
-\usepackage{keystroke}
-\usepackage{texments}
-
-
 \usepackage{fontspec,amsmath,amssymb,zhspacing,verbatim,minted,listings,zhmath}
 \usepackage{titlesec, titletoc}
 \usepackage{enumerate}
 \usepackage[hyperfootnotes=false,colorlinks,linkcolor=blue,anchorcolor=blue,citecolor=blue]{hyperref}
-%\usepackage[dvips]{graphicx}
-\usepackage{subfigure}
 \usepackage{indentfirst}
 \usepackage{float}			% don't automatically change location of figure [H]
 \usepackage{chngpage}		% use \changetext to change page size
@@ -50,13 +42,6 @@ basicstyle=\footnotesize\ttfamily}
 \newcommand{\figref}[1]{\hyperref[fig:#1]{图\ref*{fig:#1}}}
 \newcommand{\secref}[1]{\hyperref[sec:#1]{\ref*{sec:#1}节}}
 \newcommand{\tabref}[1]{\hyperref[tab:#1]{表\ref*{tab:#1}}}
-
-% math function
-\let\Oldsum\sum
-\renewcommand{\sum}{\displaystyle\Oldsum}
-\let\Oldprod\prod
-\renewcommand{\prod}{\displaystyle\Oldprod}
-
 
 \input{mint-defs.tex}
 
