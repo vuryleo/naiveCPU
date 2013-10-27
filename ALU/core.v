@@ -42,7 +42,7 @@ begin : CORE
     result <= 0;
   end
   else
-  begin 
+  begin
     case (op)
       ADD: result <= dataA + dataB;
       SUB: result <= dataA - dataB;

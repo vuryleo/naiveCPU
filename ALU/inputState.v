@@ -9,7 +9,6 @@ module inputState(
 
 parameter SIZE = 2;
 parameter DATAA = 2'b00, DATAB = 2'b01, OP = 2'b10, SF = 2'b11;
-
 reg [SIZE - 1 : 0] state;
 
 always @ (negedge rst or posedge clk)

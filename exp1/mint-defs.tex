@@ -1,5 +1,5 @@
 % $File: mint-defs.tex
-% $Date: Mon Oct 07 22:04:16 2013 +0800
+% $Date: Sun Oct 27 23:49:39 2013 +0800
 % $Author: wyx <ppwwyyxxc@gmail.com>
 
 
@@ -29,3 +29,6 @@
 
 \newcommand{\matsrc}[2][]{\inputmintedConfigured[#1]{matlab}{#2}}
 \newcommand{\matsrcpart}[4][]{\matsrc[firstline=#3,firstnumber=#3,lastline=#4,#1]{#2}}
+
+\newcommand{\versrc}[2][]{\inputmintedConfigured[#1]{verilog}{#2}}
+\newcommand{\versrcpart}[4][]{\versrc[firstline=#3,firstnumber=#3,lastline=#4,#1]{#2}}

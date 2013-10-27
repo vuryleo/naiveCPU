@@ -1,0 +1,44 @@
+% File: intro.tex
+% Date: Mon Oct 28 00:10:22 2013 +0800
+% Author: Yuxin Wu <ppwwyyxxc@gmail.com>
+
+\section{实验工具及环境}
+\begin{description}
+  \item[操作系统] Windows XP (虚拟机)
+  \item[软件] Xilinx ISE 14.6
+  \item[语言] Verilog
+\end{description}
+
+\section{模块设计}
+顶层alu分为三个模块:
+\begin{enumerate}
+  \item 状态机inputState: 接收clk, 在读入/输出的四种状态中切换, 并向core和selector发送指令.
+  \item 计算核心core: 当状态机状态进入计算时, 对输入数据执行计算.
+  \item 选择器selector: 当状态机进入某个输出状态时, 选择相应的flag或result进行输出.
+\end{enumerate}
+相关接口如\verb|alu.v|所示:
+\versrc{src/alu.v}
+
+各模块详细代码见附录.
+
+\section{实验过程}
+首先测试发现三个人的Linux系统上的Xilinx软件都无法正常连接实验平台,
+于是开始安装Windows XP虚拟机并安装Xilinx, 之后开始代码调试.
+
+代码烧入后实验机上没有任何反应, 经过分析后认为应该是Reset的状态不对.
+通过修改代码输出Reset值, 发现Reset按下为0, 与代码期待行为相反, 因而实验平台一直处于Reset状态.
+
+之后的主要问题是不清楚平台上管脚高低位的对应顺序, 因此无法观测程序行为.
+做了几次小实验后清楚了平台设置, 再将原始代码烧入就完成了实验.
+
+\section{经验及总结}
+这次实验总体比较简单, 我们在实验前期主要复习巩固了verilog语法,
+实验中在环境配置上出了些问题, 但也很快得到了解决.
+
+另外, 这次的实验, 我们将各部分功能进行了模块化设计,
+锻炼了初步的模块设计能力, 希望能为今后进一步的实验有所帮助.
+
+\section{实验代码}
+\versrc{src/inputState.v}
+\versrc{src/core.v}
+\versrc{src/selector.v}
