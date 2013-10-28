@@ -8,7 +8,7 @@ all: rebuild
 rebuild output/$(TARGET).pdf: *.tex *.bib output
 	cd output && rm -f *.tex *.bib && ln -s ../*.tex ../*.bib .
 	cd output &&  $(TEX) $(TARGET).tex
-	cp output/$(TARGET).pdf ../ -f
+	cp output/$(TARGET).pdf ./ -f
 
 
 output:
