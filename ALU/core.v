@@ -57,7 +57,7 @@ begin : CORE
       SLL: result <= dataA << dataB;
       SRL: result <= dataA >> dataB;
       SRA: result <= dataA >>> dataB;
-      ROL: result <= (dataA >> dataB) | dataA << (16 - dataB);
+      ROL: result <= (dataA << dataB) | dataA >> (16 - dataB);
 		default: result <= op;
     endcase
   end
