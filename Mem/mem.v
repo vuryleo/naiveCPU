@@ -3,12 +3,12 @@ module mem(
   input rst,
   input showData,
   input [15:0] in,
-  inout [15:0] data,
+  inout [15:0] dataBus,
   output memRead, memWrite, memEable,
   output [15:0] display
 );
 
-wire [15:0] initAddr, initData, increment, addr;
+wire [15:0] initAddr, initData, increment, addr, dataWrite, dataRead;
 wire [1:0] control;
 
 inputState inputStateM (
@@ -30,7 +30,7 @@ adder adderMForAddr (
 adder adderMForData (
   initData,
   increment,
-  data
+  dataWrite
 )
 
 core coreM (
@@ -38,7 +38,9 @@ core coreM (
   rst,
   control,
   addr,
-  data,
+  dataWrite,
+  dataBus,
+  dataRead,
   memRead, memWrite, memEable,
   result
 );
@@ -46,7 +48,7 @@ core coreM (
 selector selectorM (
   showData,
   addr,
-  data,
+  dataRead,
   display
 );
 
