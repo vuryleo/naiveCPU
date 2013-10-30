@@ -25,13 +25,13 @@ adder adderMForAddr (
   initAddr,
   increment,
   addr
-)
+);
 
 adder adderMForData (
   initData,
   increment,
   dataWrite
-)
+);
 
 core coreM (
   clk,
@@ -41,8 +41,7 @@ core coreM (
   dataWrite,
   dataBus,
   dataRead,
-  memRead, memWrite, memEable,
-  result
+  memRead, memWrite, memEable
 );
 
 selector selectorM (
