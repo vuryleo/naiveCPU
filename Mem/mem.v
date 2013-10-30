@@ -4,8 +4,8 @@ module mem(
   input showData,
   input [15:0] in,
   inout [15:0] dataBus,
-  output memRead, memWrite, memEable,
-  output [15:0] display
+  output memRead, memWrite, memEnable,
+  output [15:0] addrBus, display
 );
 
 wire [15:0] initAddr, initData, increment, addr, dataWrite, dataRead;
@@ -40,8 +40,9 @@ core coreM (
   addr,
   dataWrite,
   dataBus,
+  addrBus,
   dataRead,
-  memRead, memWrite, memEable
+  memRead, memWrite, memEnable
 );
 
 selector selectorM (
