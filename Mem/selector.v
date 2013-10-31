@@ -7,8 +7,8 @@ module selector(
 always @*
 begin
   case (control)
-    0: data <= dataA;
-    1: data <= dataB;
+    0: data = dataA;
+    1: data = dataB;
   endcase
 end
 endmodule

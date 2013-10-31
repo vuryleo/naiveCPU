@@ -6,9 +6,9 @@ module adder (
 
 initial result <= 0;
 
-always @ (*)
+always @ (dataA, dataB)
 begin : ADD
-  result <= dataA + dataB;
+  result = dataA + dataB;
 end
 endmodule
 

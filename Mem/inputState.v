@@ -7,9 +7,10 @@ module inputState(
 );
 
 parameter SIZE = 2;
-parameter MAX_INCREMENT = 10;
+parameter MAX_INCREMENT = 9;
 parameter ADDR = 2'b00, DATA = 2'b01, WRITE = 2'b10, READ = 2'b11;
 reg [SIZE - 1 : 0] state;
+reg delay;
 
 initial
 begin
@@ -20,7 +21,7 @@ begin
   control <= 2'b00;
 end
 
-always @ (negedge rst or posedge clk)
+always @ (negedge rst or negedge clk)
 begin : FSM_SEQ
   if (rst == 0)
   begin
@@ -40,10 +41,7 @@ begin : FSM_SEQ
           increment <= 0;
         end
         else
-        begin
-          state <= WRITE;
           increment <= increment + 1;
-        end
       end
       READ:
       begin
@@ -53,39 +51,32 @@ begin : FSM_SEQ
           increment <= 0;
         end
         else
-        begin
-          state <= READ;
           increment <= increment + 1;
-        end
       end
     endcase
   end
 end
 
-always @ (negedge rst or posedge clk)
+always @ (state or clk)
 begin : OUTPUT_LOGIC
-  if (rst == 0)
-  begin
-    data <= 0;
-    addr <= 0;
-  end
-  else
-  begin
-    case (state)
-      ADDR:
-      begin
-        addr <= in;
-        control <= 2'b00;
-      end
-      DATA:
-      begin
-        data <= in;
-        control <= 2'b00;
-      end
-      WRITE: control <= 2'b01;
-      READ: control <= 2'b10;
-    endcase
-  end
+  case (state)
+    ADDR:
+    begin
+      addr = in;
+      control = 2'b00;
+    end
+    DATA:
+    begin
+      data = in;
+      control = 2'b00;
+    end
+    WRITE:
+	 if (clk)
+	   control = 2'b00;
+	 else
+	   control = 2'b01;
+    READ:
+	   control = 2'b10;
+  endcase
 end
 endmodule
-
