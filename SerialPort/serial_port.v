@@ -17,8 +17,9 @@ module serial_port(
 
   reg [2:0] state, next_state;
   reg bus_written;
+	reg [7:0] recv_val;
 
-  assign ram1_data = bus_written ? data_to_send : 8'bzzzzzzzz;
+  assign ram1_data = bus_written ? (mode == MODE_WRITE ? data_to_send : recv_val) : 8'bzzzzzzzz;
   assign ram1_oe = 1;
   assign ram1_we = 1;
   assign ram1_en = 1;
@@ -29,7 +30,12 @@ module serial_port(
     else
       state <= next_state;
   end
-	assign leddebug = {data_ready, next_state,state,mode};
+	assign leddebug = {recv_val[4:0], state};
+
+	always @(mode, state, led) begin
+		if (mode == MODE_SYNTHESIS && state == 2)
+			recv_val = led + 1;
+	end
 
   always @(state, data_ready, tbre, tsre) begin
 		bus_written = 0;
@@ -102,25 +108,30 @@ module serial_port(
 
 					// write phase
 					3: begin
-						rdn = 1;
-						wrn = 0;
-						next_state = 4;
-						bus_written = 1;
+					  rdn = 1;
+					  wrn = 1;
+					  next_state = 4;
 					end
 					4: begin
 						rdn = 1;
+						wrn = 0;
 						next_state = 5;
-						wrn = 1;
+						bus_written = 1;
 					end
 					5: begin
 						rdn = 1;
+						next_state = 6;
 						wrn = 1;
-						next_state = tbre ? 6 : 5;
+					end
+					6: begin
+						rdn = 1;
+						wrn = 1;
+						next_state = tbre ? 7 : 6;
 					end
 					default: begin
 						rdn = 1;
 						wrn = 1;
-						next_state = tsre ? 0 : 6;
+						next_state = tsre ? 0 : 7;
 					end
 				endcase
 		endcase
