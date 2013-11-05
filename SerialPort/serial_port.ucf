@@ -1,4 +1,4 @@
-NET "clk"             LOC  = B8;
+NET "clk"             LOC  = U9;
 NET "rst"             LOC  = U10;
 
 NET "data_to_send[0]" LOC  = R1;
@@ -36,3 +36,15 @@ NET "rdn"             LOC  = C14;
 NET "tbre"            LOC  = D14;
 NET "tsre"            LOC  = N9;
 NET "wrn"             LOC  = U5;
+
+NET "mode[0]"		LOC = U1;
+NET "mode[1]"		LOC = R4;
+
+NET "leddebug[0]"  LOC = A12;
+NET "leddebug[1]"  LOC = E12;
+NET "leddebug[2]"  LOC = F12;
+NET "leddebug[3]"  LOC = A13;
+NET "leddebug[4]"  LOC = B13;
+NET "leddebug[5]"  LOC = D13;
+NET "leddebug[6]"  LOC = E13;
+NET "leddebug[7]"  LOC = A14;

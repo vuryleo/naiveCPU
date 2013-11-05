@@ -6,103 +6,123 @@ module serial_port(
   inout [7:0] ram1_data,       // bus
   output reg rdn, wrn,
   output ram1_oe, ram1_we, ram1_en,
-  output reg [7:0] led         // LED displays data received by serial port
+  output reg [7:0] led,         // LED displays data received by serial port
+	output [7:0] leddebug
+
 );
 
   localparam MODE_WRITE = 2'b00;
   localparam MODE_READ = 2'b01;
   localparam MODE_SYNTHESIS = 2'b10;
 
-  reg [1:0] state, next_state;
-  reg [7:0] bus;
+  reg [2:0] state, next_state;
   reg bus_written;
 
-  assign ram1_data = bus_written ? bus : 8'bzzzzzzzz;
+  assign ram1_data = bus_written ? data_to_send : 8'bzzzzzzzz;
   assign ram1_oe = 1;
   assign ram1_we = 1;
   assign ram1_en = 1;
 
-  always @(negedge clk, negedge rst) begin
-    if (! rst) begin
+  always @(negedge clk or negedge rst) begin
+    if (!rst)
       state <= 0;
-    end else if (! clk)
+    else
       state <= next_state;
   end
+	assign leddebug = {data_ready, next_state,state,mode};
 
-  always @* begin
-    bus_written = 0;
-    if (! rst) begin
-      rdn = 1;
-      wrn = 1;
-      bus = 8'bzzzzzzzz;
-    end else
-      case (mode)
-        MODE_WRITE:
-          case (state)
-            0: begin
-              next_state = 1;
-              wrn = 1;
-              bus_written = 1;
-              bus = data_to_send;
-            end
-            1: begin
-              next_state = 2;
-              wrn = 0;
-            end
-            default:
-              next_state = tsre ? 0 : 2;
-          endcase
+  always @(state, data_ready, tbre, tsre) begin
+		bus_written = 0;
+		led = 0;
+		case (mode)
+			MODE_WRITE: begin
+				case (state)
+					0: begin
+						rdn = 1;
+						wrn = 0;
+						next_state = 1;
+						bus_written = 1;
+					end
+					1: begin
+						rdn = 1;
+						next_state = 2;
+						wrn = 1;
+					end
+					2: begin
+						rdn = 1;
+						wrn = 1;
+						next_state = tbre ? 3 : 2;
+					end
+					default: begin
+						rdn = 1;
+						wrn = 1;
+						next_state = tsre ? 0 : 3;
+					end
+				endcase
+			end
+			MODE_READ:
+				case (state)
+					0: begin
+						next_state = 1;
+						rdn = 1;
+						wrn = 1;
+					end
+					1: begin
+						next_state = data_ready ? 2 : 1;
+						rdn = 1;
+						wrn = 1;
+					end
+					default: begin
+						next_state = 0;
+						wrn = 1;
+						rdn = 0;
+						led = ram1_data;
+					end
+				endcase
 
-        MODE_READ:
-          case (state)
-            0: begin
-              next_state = 1;
-              bus = 8'bzzzzzzzz;
-              rdn = 1;
-            end
-            1: begin
-              next_state = data_ready ? 2 : 0;
-              rdn = 0;
-            end
-            default: begin
-              next_state = 0;
-              led = ram1_data;
-            end
-          endcase
+			MODE_SYNTHESIS:
+				case (state)
+					// read phase
+					0: begin
+						next_state = 1;
+						rdn = 1;
+						wrn = 1;
+					end
+					1: begin
+						next_state = data_ready ? 2 : 1;
+						rdn = 1;
+						wrn = 1;
+					end
+					2: begin
+						next_state = 3;
+						wrn = 1;
+						rdn = 0;
+						led = ram1_data;
+					end
 
-        MODE_SYNTHESIS:
-          case (state)
-            // read phase
-            0: begin
-              next_state = 1;
-              bus = 8'bzzzzzzzz;
-              rdn = 1;
-            end
-            1: begin
-              next_state = data_ready ? 2 : 0;
-              rdn = 0;
-            end
-            2: begin
-              next_state = 3;
-              led = ram1_data;
-            end
-
-            // write phase
-            3: begin
-              next_state = 4;
-              wrn = 1;
-              bus_written = 1;
-              bus = data_to_send;
-            end
-            4: begin
-              next_state = 5;
-              wrn = 0;
-            end
-            default: begin
-              next_state = tsre ? 0 : 5;
-            end
-          endcase
-      endcase
-  end
-
+					// write phase
+					3: begin
+						rdn = 1;
+						wrn = 0;
+						next_state = 4;
+						bus_written = 1;
+					end
+					4: begin
+						rdn = 1;
+						next_state = 5;
+						wrn = 1;
+					end
+					5: begin
+						rdn = 1;
+						wrn = 1;
+						next_state = tbre ? 6 : 5;
+					end
+					default: begin
+						rdn = 1;
+						wrn = 1;
+						next_state = tsre ? 0 : 6;
+					end
+				endcase
+		endcase
+	end
 endmodule
