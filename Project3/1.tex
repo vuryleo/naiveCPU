@@ -1,0 +1,141 @@
+\title{\input{_title}}
+\author{宋方睿~刘啸宇~吴育昕}
+\date{\the\year年\the\month月\the\day日}
+\maketitle
+\tableofcontents
+
+\section{实验目的}
+\begin{enumerate}
+  \item 熟悉THINPAD教学计算机内存储器的配置与总线的连接方式
+  \item 熟悉THINPAD教学计算机内串行接口的配置与总线的连接方式
+  \item 掌握教学机内存(RAM)的访问时序和方法
+  \item 掌握教学机串口UART的访问时序和方法
+  \item 理解总线数据传输的基本原理
+\end{enumerate}
+
+\section{实验工具及环境}
+\begin{description}
+  \item[操作系统] Windows XP (虚拟机)
+  \item[软件] Xilinx ISE 14.6
+  \item[语言] Verilog 2001
+\end{description}
+
+\section{实验原理}
+THINPAD使用两片$256\times 1024\times 16\mathrm{b}$的SRAM。
+读取SRAM要提前准备好地址，并将数据线设置成高阻，然后即可读出数据；
+写SRAM要提前准备好数据，将信号拉低即可将数据写入相应地址。
+
+完成实验要给内存芯片提供地址、数据和控制信号。初始地址、数据均来自拨码开关，
+并需要有寄存器接收并保存，然后分别送到地址总线和数据总线。
+
+
+\section{模块设计}
+
+各模块详细代码见附录.
+
+\section{实验过程}
+做内存储器系统实验时，烧录程序后我们发现芯片没能正确地写入数据。
+后来发现可能需要拆分，于是我们把写周期分为\texttt{clk}为0时和为1时两个阶段，
+在前一个阶段(\texttt{clk}为0时)开启写模式，而在\texttt{clk}松开为1时关闭写模式
+使得数据能被正常写入。
+
+串口实验使用的变量很多，我们都不是很清楚原理，相当于是把书上的描述直接
+翻译为Verilog代码。因为LED灯有多16个，我们把不用的8个用于调试各个变量：当前状态、
+状态机的下一个状态、从数据线读到的数据、待写入的数据等。
+
+我们采取了状态机的两段式写法，把输出逻辑与后继状态模块合并。
+这一部分一开始混合了时序逻辑，发现产生错误，后来添加冗余的变量赋值转化为组合逻辑，
+之后就发现读模式和写模式都能正常工作了。
+综合模式里我们使用一个变量区分写模式/综合模式里待写入的变量，发现无法对变量进程加一操作，
+而需要在读取到值后立刻执行计算。
+做了一些测试后均未出现问题, 于是结束实验.
+
+\section{实验数据}
+
+\begin{table}[H]
+  \begin{center}
+    \caption{存储器}
+    \begin{tabular}{c|c|c|c|c}
+      \shline
+      \multicolumn{2}{c|}{写内存} & \multicolumn{2}{c|}{读内存} & \multirow{2}{*}{读写一致性} \\ \cline{1-4}
+      地址 & 数据 & 地址 & 数据 & \\ \shline
+      10 & 00 & 10 & 10 & 一致 \\ \hline
+      11 & 01 & 11 & 11 & 一致 \\ \hline
+      12 & 02 & 12 & 12 & 一致 \\ \hline
+      13 & 03 & 13 & 13 & 一致 \\ \hline
+      14 & 04 & 14 & 14 & 一致 \\ \hline
+      15 & 05 & 15 & 15 & 一致 \\ \hline
+      16 & 06 & 16 & 16 & 一致 \\ \hline
+      17 & 07 & 17 & 17 & 一致 \\ \hline
+      18 & 08 & 18 & 18 & 一致 \\ \hline
+      19 & 09 & 19 & 19 & 一致 \\ \shline
+    \end{tabular}
+  \end{center}
+\end{table}
+
+\begin{table}[H]
+  \begin{center}
+    \caption{串口访问}
+    \begin{tabular}{c|c|c|c}
+      \shline
+      \multicolumn{2}{c|}{写串口} & \multicolumn{2}{c}{读串口} \\ \hline
+      拨码开关数据 & 串口精灵收到数据 & 串口精灵发送数据 & 数码管显示数据 \\ \shline
+      00000000 & 00 & 00 & 00000000 \\ \hline
+      00011111 & 1F & 1F & 00011111 \\ \hline
+      00100011 & 23 & 23 & 00100011 \\ \hline
+    \end{tabular}
+  \end{center}
+\end{table}
+
+\section{经验及总结}
+这两次实验比较麻烦，原因在我们对存储器和串口的访问原理不甚清楚，
+对硬件描述语言Verilog的特性了解程度也还不够。
+因为涉及的变量较多，我们不知道如果进行前后仿测试，调试的技巧也有待增强。
+这两次实验锻炼了我们的模块设计能力, 希望能为今后进一步的实验有所帮助。
+
+\section{思考题}
+\begin{enumerate}
+  \item 静态存储器的读和写各有什么特点？
+
+    SRAMS是具有静止存取功能的内存，不需要刷新电路就可以保存它内部储的数据，访问速度快操作、管理方式简单方便，不需要额外的内存刷新电路。
+    读操作时，将\texttt{EN}控制端使能后，先得将输出数据置为高阻，之后将输出使能\texttt{OE}置0并提供数据地址，在等一定的时间后就可以将数据读出。
+    写操作时，在将\texttt{EN}控制端使能后，先要将地址和数据准备好并将\texttt{WE}置为0，之后再置1，即执行写入操作。等一定的保持时间后，才可以将数据和地址撤销。
+
+  \item 什么是RAM芯片输出的高阻态？它的作用是什么？
+
+    处于高阻抗状态时，输出电阻很大，相当于开路，没有任何逻辑控制功能，
+    用于在输入时读入外部电平。
+
+  \item 本实验完成的是将RAM1和RAM2作为独立的存储器单独进行访问的功能。如果希望将RAM1和RAM2
+    作为一个统一的32位数据的存储器进行访问，该如何进行？
+
+    令RAM1储存高16位数据，RAM2储存低16位数据。两者的访问地址和读写模式都相同，
+    但用于读取/写入数据的数据线不一样。
+
+  \item 请总结教学机上的UART和普通的串口芯片8251的异同点。
+
+    相同点：都能实现并行数据和串的转换，发送接收过程也相同。
+
+    不同点：教学机上的UART没有设计缓冲，也没有可编程性，对于许多不同的CPU频率也能正常工作。
+
+  \item 如果要求将串口精灵中发送过来的数据存入到RAM1的某个单元，然后从该单元中读出，
+    再加1送回到串口精灵，则代码需要进行怎样的修改？
+
+    因为UART和RAM1共享基本总线的，需要通过三个控制信号\texttt{RAM1\_EN}、\texttt{RAM1\_OE}、\texttt{RAM1\_RW}
+    使它们交替工作。先将RAM1禁止，接收到数据后，存到某个中间信号；下个周期将UART禁止，将暂存的数据写入RAM1。
+    之后再读取RAM1，禁止RAM1，通过UART发送。
+\end{enumerate}
+
+\section{实验代码}
+
+\subsection{存储器}
+
+\versrc{src/Mem/inputState.v}
+\versrc{src/Mem/core.v}
+\versrc{src/Mem/selector.v}
+\versrc{src/Mem/adder.v}
+\versrc{src/Mem/mem.v}
+
+\subsection{串口访问}
+
+\versrc{src/SerialPort/serialPort.v}

@@ -1,35 +1,37 @@
-TARGET=report
-TEX=xelatex -interaction=nonstopmode -shell-escape
-BIBTEX=bibtex
-READER=mupdf
+.PHONY: all clean watch dist release
 
-all: rebuild
+TARGET := report
+TEX := xelatex -shell-escape
+COMMON_SRC :=
+RELEASE_SRC := $(COMMON_SRC) output/report.pdf
+DIST_SRC := $(COMMON_SRC) *.tex img Makefile
 
-rebuild output/$(TARGET).pdf: *.tex *.bib output
-	cd output && rm -f *.tex *.bib && ln -s ../*.tex ../*.bib .
-	cd output &&  $(TEX) $(TARGET).tex
-	cp output/$(TARGET).pdf ./ -f
+NULL :=
+SPACE := $(NULL) $(NULL)
+remove-space = $(subst $(SPACE),,$1)
 
+all output/$(TARGET).pdf: output/report.tex output/1.tex output/_title.tex | output
+	cd output && $(TEX) $(TARGET).tex
+
+output/%: % | output
+	cd output && ln -s ../$< .
 
 output:
-	mkdir output -p
-	cd output && rm -f src && ln -s ../src  ./
-
-view: output/$(TARGET).pdf
-	$(READER) output/$(TARGET).pdf &
+	mkdir $@
 
 clean:
-	rm -rf output
+	$(RM) -r output
 
-# compile twice to get cross reference right
-final : *.tex *.bib output
-	cd output && rm -f *.tex *.bib && ln -s ../*.tex ../*.bib .
-	cd output && $(TEX) $(TARGET).tex && $(BIBTEX) $(TARGET).aux && \
-		$(TEX) $(TARGET).tex && $(TEX) $(TARGET).tex
+dist:
+	tar zcf '/tmp/$(call remove-space,$(notdir $(CURDIR)))-dist.tar.gz' $(DIST_SRC) --exclude '.*'
 
-count:
-	@word_count *.tex
+release:
+ifeq ($(words $(RELEASE_SRC)),1)
+	cp -a $(RELEASE_SRC) '/tmp/$(call remove-space,$(notdir $(CURDIR)))-release.pdf'
+else
+	tar zcf '/tmp/$(call remove-space,$(notdir $(CURDIR)))-release.tar.gz' $(RELEASE_SRC) --exclude '.*' --transform 's,output/report.pdf,report.pdf,' --transform s,^,2011011269/,
+endif
 
-run: view
-
-.PHONY: all view clean rebuild run
+watch:
+	llpp output/report.pdf &
+	(inotifywait -mqe CLOSE_WRITE output/report.pdf | while read; do pkill -1 llpp; done) &
