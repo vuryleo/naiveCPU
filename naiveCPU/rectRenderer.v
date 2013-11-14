@@ -8,7 +8,7 @@ module RectRenderer (
 
 always @ (*)
   if (!enable)
-    hit = (x > cx - length >> 1 && x < cx + length >> 1 && y > cy - length >> 1 && y < cy + length >> 1);
+    hit = (x > cx - width >> 1 && x < cx + width >> 1 && y > cy - height >> 1 && y < cy + height >> 1);
   else
     hit = 0;
 endmodule

@@ -15,70 +15,70 @@ reg [6:0] enable;
 always @ (digit)
 begin
   case (digit)
-    1'h0: enable = 7'b1000000;
-    1'h1: enable = 7'b1111001;
-    1'h2: enable = 7'b0100100;
-    1'h3: enable = 7'b0110000;
-    1'h4: enable = 7'b0011001;
-    1'h5: enable = 7'b0010010;
-    1'h6: enable = 7'b0000010;
-    1'h7: enable = 7'b1111000;
-    1'h8: enable = 7'b0000000;
-    1'h9: enable = 7'b0010000;
-    1'hA: enable = 7'b0001000;
-    1'hb: enable = 7'b0000111;
-    1'hC: enable = 7'b1000110;
-    1'hd: enable = 7'b0100001;
-    1'hE: enable = 7'b0000110;
-    1'hF: enable = 7'b0001110;
+    4'h0: enable = 7'b1000000;
+    4'h1: enable = 7'b1111001;
+    4'h2: enable = 7'b0100100;
+    4'h3: enable = 7'b0110000;
+    4'h4: enable = 7'b0011001;
+    4'h5: enable = 7'b0010010;
+    4'h6: enable = 7'b0000010;
+    4'h7: enable = 7'b1111000;
+    4'h8: enable = 7'b0000000;
+    4'h9: enable = 7'b0010000;
+    4'hA: enable = 7'b0001000;
+    4'hb: enable = 7'b0000011;
+    4'hC: enable = 7'b1000110;
+    4'hd: enable = 7'b0100001;
+    4'hE: enable = 7'b0000110;
+    4'hF: enable = 7'b0001110;
   endcase
 end
 
 RectRenderer pos0 (
   enable[0],
   x, y,
-  cx, cy - 15,
-  20, 10,
+  cx, cy - 25,
+  10, 5,
   hit
 );
 
 RectRenderer pos1 (
   enable[1],
   x, y,
-  cx + 25, cy - 10,
-  10, 20,
+  cx + 15, cy - 10,
+  5, 10,
   hit
 );
 
 RectRenderer pos2 (
   enable[2],
   x, y,
-  cx + 25, cy + 10,
-  10, 20,
+  cx + 15, cy + 10,
+  5, 10,
   hit
 );
 
 RectRenderer pos3 (
   enable[3],
   x, y,
-  cx, cy + 15,
-  20, 10,
+  cx, cy + 25,
+  10, 5,
   hit
 );
 
 RectRenderer pos4 (
   enable[4],
   x, y,
-  cx - 25, cy + 10,
-  10, 20,
+  cx - 15, cy + 10,
+  5, 10,
   hit
 );
 
 RectRenderer pos5 (
   enable[5],
   x, y,
-  cx - 25, cy - 10,
-  10, 20,
+  cx - 15, cy - 10,
+  5, 10,
   hit
 );
 
@@ -86,7 +86,7 @@ RectRenderer pos6 (
   enable[6],
   x, y,
   cx, cy,
-  20, 10,
+  10, 5,
   hit
 );
 
