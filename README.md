@@ -1,5 +1,5 @@
 naiveCPU
---------
+========
 Implemented by
 
 * ppwwyyxx (ppwwyyxxc@gmail.com)
@@ -9,9 +9,9 @@ Implemented by
 This is a TCHO-MIPS 16bits CPU that assigned as homework of Computer Compose Principle.
 
 Protocols
----------
-Registers
 =========
+Registers
+---------
 R0 ~ R7 ==> "0000" ~ "0111"
 IH ==> "1000"
 SP ==> "1001"
