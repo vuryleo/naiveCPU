@@ -1,13 +1,17 @@
 module Register (
   input clk, rst,
   input readIndexS, readIndexT, readIndexM,
+  input tWriteEnable,
+  input tToWrite,
   input writeEnable,
   input writeIndex,
   input [15:0] dataToWrite,
-  output readResultS, readResultT, readResultM
+  output readResultS, readResultT, readResultM,
+  output tResuit
 );
 
-reg [15:0] registers [0:3];
+reg [15:0] registers [0:4'b1010];
+reg t;
 // 0000 - 0111 R1 - R7;
 // 1000 IH
 // 1001 SP
@@ -16,6 +20,7 @@ reg [15:0] registers [0:3];
 assign readResultS = registers[readIndexS];
 assign readResultT = registers[readIndexT];
 assign readResultM = registers[readIndexM];
+assign tResuit = t;
 
 always @ (negedge clk, negedge rst)
 begin
@@ -27,6 +32,8 @@ begin
   begin
     if (!writeEnable)
       registers[writeIndex] = dataToWrite;
+    if (!tWriteEnable)
+      t = tToWrite;
   end
 end
 
