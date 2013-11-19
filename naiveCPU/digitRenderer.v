@@ -37,7 +37,7 @@ end
 RectRenderer pos0 (
   enable[0],
   x, y,
-  cx, cy - 25,
+  cx, cy - 20,
   10, 5,
   hit
 );
@@ -61,7 +61,7 @@ RectRenderer pos2 (
 RectRenderer pos3 (
   enable[3],
   x, y,
-  cx, cy + 25,
+  cx, cy + 20,
   10, 5,
   hit
 );

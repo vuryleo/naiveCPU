@@ -7,15 +7,33 @@ module Register (
   input writeIndex,
   input [15:0] dataToWrite,
   output readResultS, readResultT, readResultM,
-  output tResuit
+  output tResuit,
+  // -- output to vga renderer
+  output [175:0] registersVGA
 );
 
 reg [15:0] registers [0:4'b1010];
 reg t;
-// 0000 - 0111 R1 - R7;
+// 0000 - 0111 R0 - R7;
 // 1000 IH
 // 1001 SP
 // 1010 RA
+
+// -- VGA signal
+assign registersVGA = {
+  registers[0],
+  registers[1],
+  registers[2],
+  registers[3],
+  registers[4],
+  registers[5],
+  registers[6],
+  registers[7],
+  registers[8],
+  registers[9],
+  registers[10],
+  registers[11]
+  };
 
 assign readResultS = registers[readIndexS];
 assign readResultT = registers[readIndexT];
