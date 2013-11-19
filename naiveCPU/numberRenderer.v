@@ -1,4 +1,4 @@
-module numberRenderer (
+module NumberRenderer (
   input [10:0] x, y,
   input [10:0] cx, cy,
   input [15:0] number,

@@ -20,24 +20,10 @@ begin
     end
 end
 
-registerRenderer register0 (
-  x, y,
-  200, 80,
-  0, registers[175:160],
-  hit
-);
-
-registerRenderer register1 (
-  x, y,
-  200, 160,
-  1, registers[159:144],
-  hit
-);
-
-registerRenderer register2 (
+RegisterHeapRenderer registerHeap (
   x, y,
   200, 240,
-  2, registers[143:128],
+  registers,
   hit
 );
 
