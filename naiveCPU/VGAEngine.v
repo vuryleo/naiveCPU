@@ -1,6 +1,6 @@
 module VGAEngine (
   input clk, rst,
-  output reg vgaClk, hs, vs,
+  output reg hs, vs,
   output reg[10:0] x, y
 );
 
@@ -15,9 +15,6 @@ localparam V_RESULOTION = 480,
   V_SYNC_PULSE = 2,
   V_BACK_PORCH = 33,
   V_TOTAL = 525; // Shall be sum of all things above.
-
-always @ (clk)
-  vgaClk = clk;
 
 always @ (negedge clk, negedge rst) // x param
 begin
