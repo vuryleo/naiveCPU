@@ -7,6 +7,9 @@ module cpu (
   output [175:0] registers
 );
 
+PCregister pc (
+);
+
 Register registerFile (
   clk, rst,
   0, 0, 0,

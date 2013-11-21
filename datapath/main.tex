@@ -1,0 +1,250 @@
+\section{主要部件}
+\subsection{PC寄存器}
+PC寄存器单元需要有一个使能端，其输出是当前周期的PC值，其输入通过多路选择器选择后给出下一个周期的PC值。接口代码如下：
+
+\begin{lstlisting}[language=verilog,frame=single,breaklines,breaklines,basicstyle=\footnotesize\ttfamily,numbers=left]
+--pc
+module pc (
+  input enable,
+  input [15:0] pc_in,
+  output reg [15:0] pc_out
+);
+\end{lstlisting}
+
+\subsection{PC寄存器加一单元}
+对于PC寄存器，每一个周期需要进行加一操作，作为下一个周期的PC值输入到多路选择器进行选择。其输入端口为PC值，加一后从输出端口输出。接口代码如下：
+
+\begin{lstlisting}[language=verilog,frame=single,breaklines,breaklines,basicstyle=\footnotesize\ttfamily,numbers=left]
+-- puls 1
+module pcAdder (
+  input [15:0] data_in,
+  output reg [15:0] data_out
+);
+\end{lstlisting}
+
+\subsection{指令存储器单元}
+对于指令存储器\emph{instruction memory}，通过PC寄存器输入地址，输出对应地址的指令值。接口代码如下：
+
+\begin{lstlisting}[language=verilog,frame=single,breaklines,breaklines,basicstyle=\footnotesize\ttfamily,numbers=left]
+--instruction memory
+module memory (
+  input [15:0] data_in,
+  output reg [15:0] data_out
+);
+\end{lstlisting}
+
+\subsection{寄存器单元}
+对于寄存器单元，有三个寄存器编号输入\emph{rs}, \emph{rt}, \emph{rd}。考虑特殊寄存器\emph{sp}, \emph{ra}，我们定义寄存器编号长度为4。
+
+此外，写入数据值和读写使能端也作为输入。输出是操作数$A$和$B$的值。具体接口代码如下：
+
+\begin{lstlisting}[language=verilog,frame=single,breaklines,breaklines,basicstyle=\footnotesize\ttfamily,numbers=left]
+--register unit
+module registers (
+  input [3:0] rs, rt, rd,
+  input [15:0] data_in,
+  output reg [15:0] data_a, data_b,
+  input write_en
+);
+\end{lstlisting}
+
+\subsection{判等单元}
+对于寄存器单元输出的$A$和$B$，需要判断其大小关系，作为跳转控制器的控制信号。该部件的输入是两个寄存器的数据，输出是是否相等的逻辑值。接口代码如下：
+
+\begin{lstlisting}[language=verilog,frame=single,breaklines,breaklines,basicstyle=\footnotesize\ttfamily,numbers=left]
+--equal unit
+module equal (
+  input {15:0} data_a, data_b,
+  output reg eql_result
+);
+\end{lstlisting}
+
+\subsection{符号扩展单元}
+符号扩展单元将对输入的立即数进行任意扩展。输入为当前指令，输出为扩展后的数据。接口代码如下：
+
+\begin{lstlisting}[language=verilog,frame=single,breaklines,breaklines,basicstyle=\footnotesize\ttfamily,numbers=left]
+--sign extend
+module extend (
+  input [15:0] instruction,
+  output reg [15:0] data_out
+);
+\end{lstlisting}
+
+\subsection{指令解码单元}
+该单元将指令进行解码，并分析出对应的控制信号，在流水线上传递下去。其输入为指令，输出为\emph{wb}, \emph{mem}, \emph{exe}, \emph{comp\_type}等控制信号。代码接口如下：
+
+\begin{lstlisting}[language=verilog,frame=single,breaklines,breaklines,basicstyle=\footnotesize\ttfamily,numbers=left]
+--control decode
+module decode (
+  input [15:0] instruction,
+  output reg [15:0] wb, mem, exe, comp_type
+);
+\end{lstlisting}
+
+\subsection{跳转指令加法器单元}
+对于跳转指令，由于给出的是相对跳转位移，需要对PC进行加法运算，需要一个单独的加法器单元。该加法器的输入是当前PC值和扩展后的立即数。
+输出是计算后的PC值。代码接口如下：
+
+\begin{lstlisting}[language=verilog,frame=single,breaklines,breaklines,basicstyle=\footnotesize\ttfamily,numbers=left]
+--adder unit
+module adder (
+  input [15:0] pc_val, imm_val,
+  output reg [15:0] target_pc
+);
+\end{lstlisting}
+
+\subsection{算术逻辑单元}
+算术逻辑单元部分将进行最基本的算术逻辑运算。其输入为多路选择器给出的$A$和$B$值以及运算指令代码作为控制信号。输出通过$zero$设置T寄存器的值，
+$Result$作为运算结果。代码接口如下：
+
+\begin{lstlisting}[language=verilog,frame=single,breaklines,breaklines,basicstyle=\footnotesize\ttfamily,numbers=left]
+--ALU
+module alu (
+  input [15:0] data_a, data_b,
+  input [5:0] control_signal
+  output reg [15:0] zero, result,
+);
+\end{lstlisting}
+
+\subsection{ALU控制单元}
+该单元将根据指令格式给出ALU的控制信号。其输入为指令，输出为ALU控制信号。代码接口如下：
+
+\begin{lstlisting}[language=verilog,frame=single,breaklines,breaklines,basicstyle=\footnotesize\ttfamily,numbers=left]
+--ALU controller
+module aluController (
+  input [15:0] instruction,
+  output reg [15:0] op1, op2,
+  output reg [5:0] control_signal
+);
+\end{lstlisting}
+
+\subsection{T寄存器单元}
+该单元将根据ALU的$zero$输出端给出的信号设置T寄存器的值。其中，输入包括$zero$信号和判断类型信号（是判断等于还是大于）。输出为T寄存器的值。
+代码接口如下：
+
+\begin{lstlisting}[language=verilog,frame=single,breaklines,breaklines,basicstyle=\footnotesize\ttfamily,numbers=left]
+--T register
+module tRegister (
+  input [15:0] zero,
+  input comp_type,
+  output reg comp_result
+);
+\end{lstlisting}
+
+\subsection{内存单元}
+内存单元将通过给定的地址进行访存操作。输入为地址和输入数据，同时需要读写使能作为控制信号。输出为访存得到的数据。代码接口如下：
+
+\begin{lstlisting}[language=verilog,frame=single,breaklines,breaklines,basicstyle=\footnotesize\ttfamily,numbers=left]
+--Data memory
+module memory (
+  input [15:0] address, mi_data,
+  output reg [15:0] mo_data,
+  input mem_en
+);
+\end{lstlisting}
+
+\subsection{冒险检测单元}
+该单元将通过当前指令判断是否具有某些特殊操作造成的不可避免的数据冲突（如访存操作）。在流水线中，多数数据冲突可以通过旁路解决。
+但访存阶段的冲突无法通过旁路解决，必须暂停流水线。这个过程包括让当前指令的控制信号全部为0，即不进行任何写入操作，同时让PC值保持不变，
+让IF/ID段寄存器保持不变。因此该单元的输出将作为控制信号控制PC寄存器和IF/ID寄存器组。代码接口如下：
+
+\begin{lstlisting}[language=verilog,frame=single,breaklines,breaklines,basicstyle=\footnotesize\ttfamily,numbers=left]
+--Hazard detection Unit
+module hazard (
+  input [15:0] rt_1, rs_1, rs_2,
+  input mem,
+  output pause_en
+);
+\end{lstlisting}
+
+\subsection{跳转控制单元}
+该单元通过T寄存器和判等单元的输出给PC输入的多路选择器控制信号。输入为T寄存器的值和判等单元的结果。输出为一个两位的选择信号。代码接口如下：
+
+\begin{lstlisting}[language=verilog,frame=single,breaklines,breaklines,basicstyle=\footnotesize\ttfamily,numbers=left]
+--jump control
+module jump (
+  input t_result, eql_result,
+  output reg [1:0] result
+);
+\end{lstlisting}
+
+\subsection{旁路单元}
+旁路单元将把运算结果尽快送到需要使用它的位置，从而有效避免大多数数据冲突。其输入为几个阶段的输出数据，输出为ALU和内存的控制信号。代码接口如下：
+
+\begin{lstlisting}[language=verilog,frame=single,breaklines,breaklines,basicstyle=\footnotesize\ttfamily,numbers=left]
+--bypass unit
+module bypass(
+  phase1_data,
+  phase2_data,
+  phase3_data,
+  output reg [1:0] alu_a_control, alu_b_control,
+  output reg mi_data_control
+);
+\end{lstlisting}
+
+\subsection{IF/ID寄存器组}
+根据数据通路图可以得到IF/ID寄存器组的接口如下：
+
+\begin{lstlisting}[language=verilog,frame=single,breaklines,breaklines,basicstyle=\footnotesize\ttfamily,numbers=left]
+--phase 1 (IF/ID)
+module phase1 (
+  input [15:0] pc_in, instruction_in,
+  input [3:0] rs_in, rt_in, rd_in,
+  output reg [15:0] pc_out, instruction_out,
+  output reg [3:0] rs_out, rt_out, rd_out
+);
+\end{lstlisting}
+
+由于输入输出端口过多，不详细介绍。后面的寄存器组也将只给出接口代码。具体可以参考数据通路图和其它模块的说明。
+
+\subsection{ID/EX寄存器组}
+同样，根据数据通路图可以得到ID/EX寄存器组的接口如下：
+
+\begin{lstlisting}[language=verilog,frame=single,breaklines,breaklines,basicstyle=\footnotesize\ttfamily,numbers=left]
+--phase 2 (ID/EX)
+module phase2 (
+  input [15:0] pc_in, instruction_in,
+  input [3:0] rs_in, rt_in, rd_in,
+  output reg [15:0] pc_out, instruction_out,
+  output reg [3:0] rs_out, rt_out, rd_out,
+  input [15:0] a_in, b_in,
+  output reg [15:0] a_out, b_out
+);
+\end{lstlisting}
+
+\subsection{EX/ME寄存器组}
+根据数据通路图可以得到EX/ME寄存器组的接口如下：
+
+\begin{lstlisting}[language=verilog,frame=single,breaklines,breaklines,basicstyle=\footnotesize\ttfamily,numbers=left]
+--phase 3 (EX/ME)
+module phase3 (
+  input [15:0] pc_in, instruction_in,
+  input [3:0] rs_in, rt_in, rd_in,
+  output reg [15:0] pc_out, instruction_out,
+  output reg [3:0] rs_out, rt_out, rd_out,
+  input [15:0] a_in, b_in,
+  output reg [15:0] a_out, b_out
+  input [15:0] alu_result_in,
+  output reg [15:0] alu_result_out
+);
+\end{lstlisting}
+
+\subsection{ME/WB寄存器组}
+根据数据通路图可以得到ME/WB寄存器组的接口如下：
+
+\begin{lstlisting}[language=verilog,frame=single,breaklines,breaklines,basicstyle=\footnotesize\ttfamily,numbers=left]
+--phase 4 (ME/WB)
+module phase4 (
+  input [15:0] pc_in, instruction_in,
+  input [3:0] rs_in, rt_in, rd_in,
+  output reg [15:0] pc_out, instruction_out,
+  output reg [3:0] rs_out, rt_out, rd_out,
+  input [15:0] a_in, b_in,
+  output reg [15:0] a_out, b_out
+  input [15:0] alu_result_in,
+  output reg [15:0] alu_result_out,
+  input [15:0] data_result_in
+  output reg [15:0] data_result_out
+);
+\end{lstlisting}
+
