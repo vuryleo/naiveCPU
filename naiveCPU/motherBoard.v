@@ -1,4 +1,4 @@
-module masterBoard (
+module motherBoard (
   input clk, rst,
   inout [15:0] memDataBus,
   output [17:0] memAddrBus,
