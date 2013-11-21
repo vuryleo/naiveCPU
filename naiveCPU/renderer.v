@@ -6,7 +6,7 @@ module Renderer (
 
 wor hit;
 
-always @ (x, y)
+always @ (x, y, hit)
 begin
   r = 0;
   g = 0;

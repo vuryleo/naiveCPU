@@ -1,5 +1,5 @@
 module motherBoard (
-  input clk, rst,
+  input clk, rst, clkHand,
   inout [15:0] memDataBus,
   output [17:0] memAddrBus,
   output memRead, memWrite, memEnable,
@@ -11,7 +11,7 @@ wire [175:0] registers;
 wire [15:0] memAaddr, memBaddr, memAdataRead, memBdataRead;
 
 cpu naive (
-  clk, rst,
+  clkHand, rst,
   memAaddr, memBaddr,
   memDataWrite, memRW,
   memAdataRead, memBdataRead,
@@ -25,7 +25,7 @@ GraphicCard graphic (
   vgaR, vgaG, vgaB
 );
 
-memoryController (
+memoryController memory(
   clk, rst,
   memAaddr, memDataWrite,
   memRW,

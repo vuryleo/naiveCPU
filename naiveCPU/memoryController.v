@@ -10,14 +10,14 @@ module memoryController (
   output reg [15:0] BdataRead,
 
   inout [15:0] dataBus,
-  output reg [17:0] addrBus;
-  output reg memRead, memWrite,
-  output memEnable,
+  output [17:0] addrBus,
+  output memRead, memWrite,
+  output memEnable
 );
 
-wire [15:0] addr;
-reg [15:0] dataRead;
-wire [1:0] control;
+reg [15:0] addr;
+wire [15:0] dataRead;
+reg [1:0] control;
 
 always @ (clk)
 begin
@@ -33,11 +33,13 @@ begin
   end
 end
 
-always @ (dataRead)
+always @ (clk, dataRead)
+begin
   if (!clk) // negedge
     AdataRead = dataRead;
   else // posedge
     BdataRead = dataRead;
+end
 
 Memory mem (
   clk, rst,
