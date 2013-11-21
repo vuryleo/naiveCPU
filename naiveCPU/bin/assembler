@@ -1,0 +1,210 @@
+#!/usr/bin/env ruby
+require 'optparse'
+
+class Assembler
+  def xi op, rx, i
+    op << 11 | rx << 8 | i
+  end
+
+  def xy5 op, funct, rx, ry
+    op << 11 | rx << 8 | ry << 5 | funct
+  end
+
+  def xyi op, rx, ry, i
+    op << 11 | rx << 8 | ry << 5 | i
+  end
+
+  def xyz2 op, funct, rx, ry, rz
+    op << 11 | rx << 8 | ry << 5 | rz << 2 | funct
+  end
+
+  def prefix3 op, funct, i
+    op << 11 | funct << 8 | i
+  end
+
+  def x8 op, suffix, rx
+    op << 11 | rx << 8 | suffix
+  end
+
+  def xyi2 op, suffix, rx, ry, i
+    op << 11 | rx << 8 | ry << 5 | i << 2 | suffix
+  end
+
+  def b opname, line
+    if [:beqz, :bnez].include? opname
+      unless line =~ /^r(\w+) (\w+)$/
+        STDERR.puts "Format error: #{line}"
+        abort
+      end
+      rx = $1.to_i
+      lab = $2
+    else
+      unless line =~ /^(\w+)$/
+        STDERR.puts "Format error: #{line}"
+        abort
+      end
+      lab = $1
+    end
+
+    unless @labels[lab]
+      STDERR.puts "Label not found: #{line}"
+      abort
+    end
+
+    off = @labels[lab] - (@pc + 2)
+    w = opname == 'b' ? 11 : 8
+    if off < -1 << w-1 or off >= 1 << w-1
+      STDERR.puts "Branch distance too large: #{line}"
+      abort
+    end
+
+    case opname
+    when :b
+      0b00010 << 11 | (off + (1 << w)) % (1 << w)
+    when :beqz
+      0b00100 << 11 | rx << 8 | (off + (1 << w)) % (1 << w)
+    when :bnez
+      0b00101 << 11 | rx << 8 | (off + (1 << w)) % (1 << w)
+    when :bteqz
+      0b01100 << 11 | 0b000 << 8 | (off + (1 << w)) % (1 << w)
+    when :btnez
+      0b01100 << 11 | 0b001 << 8 | (off + (1 << w)) % (1 << w)
+    end
+  end
+
+  def initialize options
+    @options = options
+    @@cat ||= {
+      xi: /^r(\d+) (\w+)$/,
+      xy5: /^r(\d+) r(\d+)$/,
+      xyi: /^r(\d+) r(\d+) (\w+)$/,
+      xyi2: /^r(\d+) r(\d+) (\w+)$/,
+      xyz2: /^r(\d+) r(\d+) r(\d+)$/,
+      prefix3: /^(\w+)$/,
+      x8: /^r(\d+)$/,
+    }
+    @@inst ||= {
+      addiu: [:xi, 0b01001],
+      addiu3: [/r(\d+) r(\d+) (\w+)/, ->rx,ry,i{ 0b01000<<11 | rx<<8 | ry<<5 | i }],
+      addsp: [:prefix3, 0b01100, 0b011],
+      addu: [:xyz2, 0b11100, 0b01],
+      and: [:xy5, 0b11101, 0b01100],
+      b: [:b],
+      beqz: [:b],
+      bnez: [:b],
+      bteqz: [:b],
+      btnez: [:b],
+      cmp: [:xy5, 0b11101, 0b01010],
+      cmpi: [:xi, 0b01110],
+      int: [/^(\w+)$/, ->i{ 0b11111 << 11 | i }],
+      jalr: [:x8, 0b11101, 0b11000000],
+      jr: [:x8, 0b11101, 0b00000000],
+      jrra: [/^$/, ->{ 0b1110100000100000 }],
+      li: [:xi, 0b01101],
+      lw: [:xyi, 0b10011],
+      lw_sp: [:xi, 0b10010],
+      mfih: [:x8, 0b11110, 0b00000000],
+      mfpc: [:x8, 0b11101, 0b01000000],
+      move: [:xy5, 0b01111, 0b00000],
+      mtih: [:x8, 0b11110, 0b00000001],
+      mtsp: [/^r(\w+)$/, ->rx{ 0b01100100 << 8 | rx << 5 }],
+      neg: [:xy5, 0b11101, 0b01011],
+      not: [:xy5, 0b11101, 0b01111],
+      nop: [/^$/, ->{ 0b0000100000000000 }],
+      or: [:xy5, 0b11101, 0b01101],
+      sll: [:xyi2, 0b00110, 0b00],
+      sllv: [:xy5, 0b11101, 0b00100],
+      slt: [:xy5, 0b11101, 0b00010],
+      sltu: [:xy5, 0b11101, 0b00011],
+      sltui: [:xi, 0b01011],
+      sra: [:xyi2, 0b00110, 0b11],
+      srav: [:xy5, 0b11101, 0b00111],
+      srl: [:xyi2, 0b00110, 0b10],
+      srlv: [:xy5, 0b11101, 0b00110],
+      subu: [:xyz2, 0b11100, 0b11],
+      sw: [:xyi, 0b11011],
+      sw_sp: [:xi, 0b11010],
+      xor: [:xy5, 0b11101, 0b01110],
+    }
+  end
+
+  def error msg
+    STDERR.puts "#{@ops[@pc>>1][0]}: #{msg}: #{@ops[@pc>>1][1].join(' ')}"
+    abort
+  end
+
+  def [] filename
+    h = filename == '-' ? STDIN : File.open(filename)
+    lines = h.readlines
+
+    @pc = 0
+    @ops = []
+    @labels = {}
+    lineno = 1
+    lines.each do |line|
+      if line !~ /^\s*#/
+        if line.sub!(/^(\w+):/, '')
+          @labels[$1] = @pc
+        end
+        unless line.strip!.empty?
+          @ops << [lineno, line.split]
+          @pc += 2
+        end
+      end
+      lineno += 1
+    end
+
+    @pc = 0
+    @ops.each do |_,args|
+      line = args.join ' '
+      opname = args.shift.downcase.to_sym
+      type, *operands = @@inst[opname]
+      error 'Unrecognized instruction' unless type
+      opcode = case type
+               when :b
+                 send type, opname, args.join(' ')
+               when Symbol
+                 error 'Format error' unless @@cat[type] =~ args.join(' ')
+                 operands += $~.captures.map {|x| x.to_i 16 }
+                 send type, *operands
+               when Regexp
+                 error 'Format error' unless type =~ args.join(' ')
+                 operands[0][* $~.captures.map {|x| x.to_i 16 }]
+               end
+      if @options[:hex] || @options[:binary]
+        STDOUT.write (@options[:hex] ? '%04x' : '%016b') % opcode
+        STDOUT.write "\t#{line}" if @options[:assembly]
+        puts
+      else
+        STDOUT.write [opcode].pack('S<')
+      end
+      @pc += 2
+    end
+    h.close
+  end
+end
+
+options = {}
+OptionParser.new do |opts|
+  opts.banner = 'Usage: assembler [options] [assembly-sources]'
+
+  opts.on '-x', '--hex', 'Print plain hexdump' do |v|
+    options[:hex] = true
+  end
+
+  opts.on '-b', '--binary', 'Print plain binary dump' do |v|
+    options[:binary] = true
+  end
+
+  opts.on '-a', '--assembly', 'Print assembly' do |v|
+    options[:assembly] = true
+  end
+
+  opts.on_tail("-h", "--help", "Show this message") do
+    puts opts
+    exit
+  end
+end.parse!
+ARGV << '-' if ARGV.empty?
+assembler = Assembler.new options
+ARGV.each {|f| assembler[f] }
