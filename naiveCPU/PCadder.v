@@ -8,10 +8,10 @@ wire [15:0] normalNextPC;
 
 always @ (negedge rst, posedge clk)
   if (!rst)
-    nextPC = 1;
+    nextPC = 2;
   else
     nextPC = normalNextPC;
 
-assign normalNextPC = currentPC + 1; // It shall be changed to 2 after implementing virtual memory address;
+assign normalNextPC = currentPC + 2;
 
 endmodule

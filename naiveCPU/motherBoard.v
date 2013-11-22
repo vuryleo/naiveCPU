@@ -10,6 +10,7 @@ module motherBoard (
 
 wire [175:0] registers;
 wire [15:0] memAaddr, memBaddr, memAdataRead, memBdataRead;
+wire [15:0] phycialMemAaddr, phycialMemBaddr;
 wire [15:0] IfPC, IfIR;
 
 assign leddebug = {IfPC};
@@ -31,12 +32,22 @@ GraphicCard graphic (
   vgaR, vgaG, vgaB
 );
 
+memoryMapping mapingA (
+  memAaddr,
+  phycialMemAaddr
+);
+
+memoryMapping mapingB (
+  memBaddr,
+  phycialMemBaddr
+);
+
 memoryController memory(
   clk, rst,
-  memAaddr, memDataWrite,
+  phycialMemAaddr, memDataWrite,
   memRW,
   memAdataRead,
-  memBaddr,
+  phycialMemBaddr,
   memBdataRead,
   memDataBus,
   memAddrBus,
