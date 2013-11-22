@@ -30,7 +30,7 @@ RegisterHeapRenderer registerHeap (
 
 IFRenderer ifResgisters (
   x, y,
-  400, 100,
+  500, 80,
   IfPC, IfIR,
   hit
 );

@@ -10,6 +10,9 @@ module cpu (
 
 wire [15:0] nextPC;
 
+//assign IfPC = 16'hFFFF;
+//assign IfIR = 16'hEEEE;
+
 PCregister pc (
   clk, rst,
   nextPC,
@@ -17,7 +20,7 @@ PCregister pc (
 );
 
 PCadder pcAdder (
-  clk,
+  clk, rst,
   IfPC,
   nextPC
 );
@@ -30,12 +33,12 @@ instructionReader reader (
   IfIR
 );
 
-IFIDregister IFIDr (
-  IfIR,
-  IdIR,
-  IfPC,
-  IdPC
-);
+//IFIDregister IFIDr (
+//  IfIR,
+//  IdIR,
+//  IfPC,
+//  IdPC
+//);
 
 Register registerFile (
   clk, rst,
