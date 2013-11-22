@@ -1,6 +1,7 @@
 module Renderer (
   input [10:0] x, y,
   input [175:0] registers,
+  input [15:0] IfPC, IfIR,
   output reg [2:0] r, g, b
 );
 
@@ -24,6 +25,13 @@ RegisterHeapRenderer registerHeap (
   x, y,
   200, 240,
   registers,
+  hit
+);
+
+IFRenderer ifResgisters (
+  x, y,
+  400, 100,
+  IfPC, IfIR,
   hit
 );
 

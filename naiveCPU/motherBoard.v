@@ -9,6 +9,7 @@ module motherBoard (
 
 wire [175:0] registers;
 wire [15:0] memAaddr, memBaddr, memAdataRead, memBdataRead;
+wire [15:0] IfPC, IfIR;
 
 cpu naive (
   clkHand, rst,

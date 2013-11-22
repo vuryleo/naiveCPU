@@ -4,10 +4,37 @@ module cpu (
   output [15:0] dataWrtie,
   output [1:0] rw,
   input [15:0] AmemRead, BmemRead,
-  output [175:0] registers
+  output [175:0] registers,
+  output [15:0] IfPC, IfIR
 );
 
+wire [15:0] nextPC;
+
 PCregister pc (
+  clk, rst,
+  nextPC,
+  IfPC
+);
+
+PCadder pcAdder (
+  clk,
+  IfPC,
+  nextPC
+);
+
+instructionReader reader (
+  clk,
+  IfPC,
+  BmemRead,
+  Baddr,
+  IfIR
+);
+
+IFIDregister IFIDr (
+  IfIR,
+  IdIR,
+  IfPC,
+  IdPC
 );
 
 Register registerFile (

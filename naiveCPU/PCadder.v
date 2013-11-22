@@ -10,6 +10,6 @@ always @ (negedge clk)
   nextPC = normalNextPC;
 
 always @ (posedge clk)
-  normalNextPC = currentPC + 1;
+  normalNextPC = currentPC + 1; // It shall be changed to 2 after implementing virtual memory address;
 
 endmodule
