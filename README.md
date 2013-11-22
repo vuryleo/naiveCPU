@@ -13,7 +13,7 @@ Protocols
 
 Boot
 ----
-On reset process, the PC register will be set to FFO0, where it BIOS located.
+On reset process, the PC register will be set to FF00, where it BIOS located.
 
 Registers
 ---------
@@ -24,7 +24,7 @@ RA ==> "1010"
 
 Memory Mapping
 --------------
-0000 ~ 7FFF physical memory
+0000 ~ 7FFF physical memory, so only 31KB of memory is available
 FF00 ~ FFFF BIOS
 
 VGA
