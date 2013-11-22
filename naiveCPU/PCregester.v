@@ -6,7 +6,7 @@ module PCregister (
 
 always @(negedge clk or negedge rst)
   if (!rst)
-    currentPC = 0;
+    currentPC = 16'hFF00;
   else
     currentPC = nextPC;
 
