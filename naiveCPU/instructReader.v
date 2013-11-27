@@ -1,5 +1,5 @@
 module instructionReader (
-  input clk,
+  input clk, rst,
   input [15:0] currentPC,
   input [15:0] memRead,
   output reg [15:0] IRaddr,
@@ -9,7 +9,10 @@ module instructionReader (
 always @ (negedge clk)
   IRaddr = currentPC;
 
-always @ (posedge clk)
-  currentIR = memRead;
+always @ (posedge clk or negedge rst)
+  if (!rst)
+    currentIR = 0;
+  else
+    currentIR = memRead;
 
 endmodule

@@ -2,7 +2,6 @@ module Renderer (
   input [10:0] x, y,
   input [175:0] registerValue,
   input [15:0] IfPC, IfIR,
-  input [3:0] registerS, registerM, registerT,
   input [15:0] calResult,
   output reg [2:0] r, g, b
 );
@@ -36,27 +35,6 @@ IFRenderer ifResgisters (
   IfPC, IfIR,
   hit
 );
-
-//DigitRenderer renderRegisterS (
-//  x, y,
-//  400, 160,
-//  registerS,
-//  hit
-//);
-//
-//DigitRenderer renderRegisterM (
-//  x, y,
-//  450, 160,
-//  registerM,
-//  hit
-//);
-//
-//DigitRenderer renderRegisterT (
-//  x, y,
-//  500, 160,
-//  registerT,
-//  hit
-//);
 
 registerRenderer renderCalResult (
   x, y,

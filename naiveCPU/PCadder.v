@@ -8,7 +8,7 @@ wire [15:0] normalNextPC;
 
 always @ (negedge rst, posedge clk)
   if (!rst)
-    nextPC = 16'hFF02;
+    nextPC = 16'h0002;
   else
     nextPC = normalNextPC;
 
