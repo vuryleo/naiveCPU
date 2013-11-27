@@ -1,6 +1,6 @@
 module Renderer (
   input [10:0] x, y,
-  input [175:0] registers,
+  input [175:0] registerValue,
   input [15:0] IfPC, IfIR,
   input [3:0] registerS, registerM, registerT,
   output reg [2:0] r, g, b
@@ -22,10 +22,10 @@ begin
     end
 end
 
-RegisterHeapRenderer registerHeap (
+RegisterHeapRenderer registerFile (
   x, y,
   200, 240,
-  registers,
+  registerValue,
   hit
 );
 
@@ -53,7 +53,7 @@ DigitRenderer renderRegisterM (
 DigitRenderer renderRegisterT (
   x, y,
   500, 160,
-  registerM,
+  registerT,
   hit
 );
 

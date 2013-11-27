@@ -8,11 +8,12 @@ module motherBoard (
   output [15:0] leddebug
 );
 
-wire [175:0] registers;
+wire [175:0] registerValue;
 wire [15:0] memAaddr, memBaddr, memAdataRead, memBdataRead;
 wire [15:0] physicalMemAaddr, physicalMemBaddr;
 wire [15:0] ramAdataRead, ramBdataRead, romAdataReadn, romBdataRead;
 wire [15:0] IfPC, IfIR;
+wire [3:0] registerS, registerM, registerT;
 
 assign leddebug = {ramAdataRead};
 
@@ -21,14 +22,16 @@ cpu naive (
   memAaddr, memBaddr,
   memDataWrite, memRW,
   memAdataRead, memBdataRead,
-  registers,
-  IfPC, IfIR
+  registerValue,
+  IfPC, IfIR,
+  registerS, registerM, registerT
 );
 
 GraphicCard graphic (
   clk, rst,
-  registers,
+  registerValue,
   IfPC, IfIR,
+  registerS, registerM, registerT,
   vgaHs, vgaVs,
   vgaR, vgaG, vgaB
 );

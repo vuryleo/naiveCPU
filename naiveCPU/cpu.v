@@ -4,7 +4,7 @@ module cpu (
   output [15:0] dataWrtie,
   output [1:0] rw,
   input [15:0] AmemRead, BmemRead,
-  output [175:0] registers,
+  output [175:0] registerValue,
   output [15:0] IfPC, IfIR,
   output [3:0] registerS, registerM, registerT,
   output [1:0] memControl
@@ -48,7 +48,7 @@ Register registerFile (
   1, 0,
   registerT,
   0,
-  registers
+  registerValue
 );
 
 endmodule

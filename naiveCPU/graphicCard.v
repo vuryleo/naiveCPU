@@ -29,7 +29,7 @@ Renderer RendererM (
   x, y,
   registerVGA,
   IfPC, IfIR,
-  registerS, RendererM, registerT,
+  registerS, registerM, registerT,
   r, g, b
 );
 

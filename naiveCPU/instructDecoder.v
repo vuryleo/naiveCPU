@@ -11,7 +11,13 @@ begin
   registerM = 0;
   registerT = 0;
   memControl = 2'b00; // IDLE
-  if (rst) // not the negedge of rst
+  if (!rst) // the negedge of rst
+  begin
+    registerS = 0;
+    registerM = 0;
+    registerT = 0;
+  end
+  else
   begin
     case (instruction[15:11])
       5'b00000:                         // addsp3
@@ -74,16 +80,20 @@ begin
         registerT = instruction[10:8];
       end
       5'b10010:                         // lw_sp
+      begin
         registerS = 4'b1001;            // sp
         registerT = instruction[10:8];
+      end
       5'b10011:                         // lw
       begin
         registerS = instruction[10:8];
         registerT = instruction[7:5];
       end
       5'b11010:                         // sw_sp
+      begin
         registerS = 4'b1001;            // sp
         registerM = instruction[10:8];
+      end
       5'b11011:                         // sw
       begin
         registerS = instruction[7:5];
