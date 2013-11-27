@@ -1,12 +1,12 @@
 module Register (
   input clk, rst,
-  input readIndexS, readIndexT, readIndexM,
+  input [3:0] readIndexS, readIndexM,
   input tWriteEnable, tToWrite,
-  input writeEnable, writeIndex,
+  input [3:0] writeIndex,
   input [15:0] dataToWrite,
   // -- output to vga renderer
   output [175:0] registersVGA,
-  output readResultS, readResultT, readResultM,
+  output readResultS, readResultM,
   output tResuit
 );
 
@@ -33,7 +33,6 @@ assign registersVGA = {
   };
 
 assign readResultS = registers[readIndexS];
-assign readResultT = registers[readIndexT];
 assign readResultM = registers[readIndexM];
 assign tResuit = t;
 
@@ -45,7 +44,7 @@ begin
   end
   else
   begin
-    if (!writeEnable)
+    if (!writeIndex)
       registers[writeIndex] = dataToWrite;
     if (!tWriteEnable)
       t = tToWrite;

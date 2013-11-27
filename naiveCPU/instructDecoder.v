@@ -1,14 +1,16 @@
 module instructionDecoder (
   input clk, rst,
   input [15:0] instruction,
-  output reg [3:0] registerS, registerT, registerM
+  output reg [3:0] registerS, registerM, registerT,
+  output reg [1:0] memControl
 );
 
 always @ (negedge clk or negedge rst)
 begin
   registerS = 0;
-  registerT = 0;
   registerM = 0;
+  registerT = 0;
+  memControl = 2'b00; // IDLE
   if (rst) // not the negedge of rst
   begin
     case (instruction[15:11])
@@ -34,14 +36,21 @@ begin
         registerT = instruction[7:5];
       end
       5'b01001:                         // addiu
+      begin
+        registerS = instruction[10:8];
         registerT = instruction[10:8];
+      end
       5'b01010:                         // slti
         registerS = instruction[10:8];
       5'b01100:                         // addsp, bteqz, btnez, mtsp, sw_rs
         case (instruction[10:8])
           //3'b000:                       // bteqz
           //3'b001:                       // btnez
-          //3'b010:                       // sw_rs
+          3'b010:                       // sw_rs
+          begin
+            registerS = 4'b1010;
+            registerM = 4'b1001;
+          end
           3'b011:                       // addsp
           begin
             registerS = 4'b1001;        // sp
@@ -98,7 +107,7 @@ begin
               3'b110:                   // jalr
               begin
                 registerS = instruction[10:8];
-                registerT = 4'b1010;    // RA
+                registerT = 4'b1010;    // ra
               end
             endcase
           5'b00010:                     // slt

@@ -5,7 +5,9 @@ module cpu (
   output [1:0] rw,
   input [15:0] AmemRead, BmemRead,
   output [175:0] registers,
-  output [15:0] IfPC, IfIR
+  output [15:0] IfPC, IfIR,
+  output [3:0] registerS, registerM, registerT,
+  output [1:0] memControl
 );
 
 wire [15:0] nextPC;
@@ -33,18 +35,18 @@ instructionReader reader (
   IfIR
 );
 
-//IFIDregister IFIDr (
-//  IfIR,
-//  IdIR,
-//  IfPC,
-//  IdPC
-//);
+instructionDecoder decoder (
+  clk, rst,
+  IfIR,
+  registerS, registerM, registerT,
+  memControl
+);
 
 Register registerFile (
   clk, rst,
-  0, 0, 0,
+  registerS, registerM,
   1, 0,
-  1, 0,
+  registerT,
   0,
   registers
 );
