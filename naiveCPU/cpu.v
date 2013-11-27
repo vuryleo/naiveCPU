@@ -7,10 +7,11 @@ module cpu (
   output [175:0] registerValue,
   output [15:0] IfPC, IfIR,
   output [3:0] registerS, registerM, registerT,
-  output [1:0] memControl
+  output [15:0] calResult
 );
 
-wire [15:0] nextPC;
+wire [15:0] nextPC, IdIR;
+wire rs, rm;
 
 //assign IfPC = 16'hFFFF;
 //assign IfIR = 16'hEEEE;
@@ -38,8 +39,20 @@ instructionReader reader (
 instructionDecoder decoder (
   clk, rst,
   IfIR,
-  registerS, registerM, registerT,
-  memControl
+  registerS, registerM, registerT
+);
+
+forwarder IdIRforward (
+  clk, rst,
+  IfIR,
+  IdIR
+);
+
+alu calculator (
+  clk, rst,
+  rs, rm,
+  IfPC, IdIR,
+  calResult
 );
 
 Register registerFile (

@@ -16,7 +16,13 @@ begin
   t_written = 1;
   t = 0;
   res = 0;
-  if (rst) // not the negedge of rst
+  if (!rst) // the negedge of rst
+  begin
+    t_written = 1;
+    t = 0;
+    res = 0;
+  end
+  else
   begin
     case (instruction[15:11])
       5'b00000:                         // addsp3

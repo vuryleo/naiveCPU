@@ -14,6 +14,7 @@ wire [15:0] physicalMemAaddr, physicalMemBaddr;
 wire [15:0] ramAdataRead, ramBdataRead, romAdataReadn, romBdataRead;
 wire [15:0] IfPC, IfIR;
 wire [3:0] registerS, registerM, registerT;
+wire [15:0] calResult;
 
 assign leddebug = {ramAdataRead};
 
@@ -24,7 +25,8 @@ cpu naive (
   memAdataRead, memBdataRead,
   registerValue,
   IfPC, IfIR,
-  registerS, registerM, registerT
+  registerS, registerM, registerT,
+  calResult
 );
 
 GraphicCard graphic (
@@ -32,6 +34,7 @@ GraphicCard graphic (
   registerValue,
   IfPC, IfIR,
   registerS, registerM, registerT,
+  calResult,
   vgaHs, vgaVs,
   vgaR, vgaG, vgaB
 );
