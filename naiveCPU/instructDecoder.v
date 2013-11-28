@@ -2,8 +2,7 @@ module instructionDecoder (
   input clk, rst,
   input [15:0] instruction,
   output reg [15:0] instructionTemp,
-  output reg [3:0] registerS, registerM, registerT,
-  output reg [1:0] memControl
+  output reg [3:0] registerS, registerM, registerT
 );
 
 always @ (negedge clk or negedge rst)
@@ -17,13 +16,11 @@ begin
   registerS = 0;
   registerM = 0;
   registerT = 0;
-  memControl = 2'b00; // IDLE
   if (!rst) // the negedge of rst
   begin
     registerS = 0;
     registerM = 0;
     registerT = 0;
-    memControl = 2'b00; // IDLE
   end
   else
   begin
@@ -62,8 +59,8 @@ begin
           //3'b001:                       // btnez
           3'b010:                       // sw_rs
           begin
-            registerS = 4'b1010;
-            registerM = 4'b1001;
+            registerS = 4'b1010;       // ra
+            registerM = 4'b1001;       // sp
           end
           3'b011:                       // addsp
           begin
@@ -89,27 +86,23 @@ begin
       end
       5'b10010:                         // lw_sp
       begin
-        registerS = 4'b1001;            // sp
+        registerM = 4'b1001;            // sp
         registerT = instructionTemp[10:8];
-        memControl = 2'b10; // read
       end
       5'b10011:                         // lw
       begin
-        registerS = instructionTemp[10:8];
+        registerM = instructionTemp[10:8];
         registerT = instructionTemp[7:5];
-        memControl = 2'b10; // read
       end
       5'b11010:                         // sw_sp
       begin
-        registerS = 4'b1001;            // sp
-        registerM = instructionTemp[10:8];
-        memControl = 2'b01; // write
+        registerS = instructionTemp[10:8];
+        registerM = 4'b1001;            // sp
       end
       5'b11011:                         // sw
       begin
         registerS = instructionTemp[7:5];
         registerM = instructionTemp[10:8];
-        memControl = 2'b10; // write
       end
       5'b11100:                         // addu, subu
       begin
@@ -213,7 +206,6 @@ begin
         registerS = 0;
         registerM = 0;
         registerT = 0;
-        memControl = 2'b00; // IDLE
 		end
     endcase
   end

@@ -2,7 +2,7 @@ module cpu (
   input clk, rst,
   output [15:0] Aaddr, Baddr,
   output [15:0] dataWrtie,
-  output [1:0] MeMemControl,
+  output [1:0] ExMemControl,
   input [15:0] AmemRead, BmemRead,
   output [175:0] registerValue,
   output [15:0] IfPC, IfIR,
@@ -14,7 +14,7 @@ module cpu (
 wire [15:0] nextPC;//, IdIR;
 wire [15:0] rs, rm;
 //wire [3:0] registerS, registerM;
-wire [1:0] IdMemControl, ExMemControl;
+wire [1:0] /*ExMemControl, */ MeMemControl;
 wire [15:0] originValueS, originValueM;
 wire [15:0] sourceValueS, sourceValueM;
 wire [3:0] /*IdRegisterT,*/ ExRegisterT;//, MeRegisterT;//, WbRegisterT;
@@ -47,26 +47,13 @@ instructionDecoder decoder (
   clk, rst,
   IfIR,
   instructionTemp,
-  registerS, registerM, IdRegisterT,
-  IdMemControl
+  registerS, registerM, IdRegisterT
 );
 
 forwarder IdIRforward (
   clk, rst,
   IfIR,
   IdIR
-);
-
-forwarder2bit ExMemControlforward (
-  clk, rst,
-  IdMemControl,
-  ExMemControl
-);
-
-forwarder2bit MeMemControlforward (
-  clk, rst,
-  ExMemControl,
-  MeMemControl
 );
 
 forwarder4bit ExRegisterTforward (
@@ -81,10 +68,16 @@ forwarder4bit MeRegisterTforward (
   MeRegisterT
 );
 
-forwarder MeCalResultforward (
+//forwarder MeCalResultforward (
+//  clk, rst,
+//  ExCalResult,
+//  MeCalResult
+//);
+
+forwarder2bit MeMemControlforward (
   clk, rst,
-  ExCalResult,
-  MeCalResult
+  ExMemControl,
+  MeMemControl
 );
 
 alu calculator (
@@ -92,6 +85,21 @@ alu calculator (
   rs, rm,
   IfPC, IdIR,
   ExCalResult
+);
+
+memAddressCalculator addrCalculator(
+  clk, rst,
+  IdIR,
+  rm,
+  ExMemControl,
+  Aaddr
+);
+
+meCalResultSelector MeCalResultMux (
+  MeMemControl,
+  AmemRead,
+  ExCalResult,
+  MeCalResult
 );
 
 byPass MeIdByPassS (
