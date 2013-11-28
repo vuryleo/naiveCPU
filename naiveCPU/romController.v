@@ -1,5 +1,5 @@
 module romController (
-  input clk, rst,
+  input clk,
   input [15:0] romAaddr,
   output reg [15:0] romAdataRead,
   input [15:0] romBaddr,

@@ -1,6 +1,4 @@
 module Memory (
-  input clk,
-  input rst,
   input [1:0] control,
   input [15:0] addr, dataWrite,
   inout [15:0] dataBus,
@@ -26,14 +24,13 @@ begin
 end
 
 always @ (addr)
-begin
   addrBus = addr;
-end
 
-always @ (dataBus) dataRead <= dataBus;
+always @ (dataBus)
+  dataRead <= dataBus;
 
 always @ (control)
-begin : CORE
+begin
   begin
     case (control)
       WRITE:

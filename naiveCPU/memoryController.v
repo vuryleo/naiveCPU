@@ -1,5 +1,5 @@
 module memoryController (
-  input clk, rst,
+  input clk,
   // Port A is a dual port that can r/w, option will execute at the negedge
   input [15:0] Aaddr,
   input [15:0] dataWrite, // Only A can write
@@ -19,7 +19,7 @@ reg [15:0] addr;
 wire [15:0] dataRead;
 reg [1:0] control;
 
-always @ (clk)
+always @ (clk, Aaddr, rw, Baddr)
 begin
   if (!clk) // negedge
   begin
@@ -42,7 +42,6 @@ begin
 end
 
 Memory mem (
-  clk, rst,
   control,
   addr, dataWrite,
   dataBus, addrBus,

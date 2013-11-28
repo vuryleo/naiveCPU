@@ -1,17 +1,17 @@
 module cpu (
   input clk, rst,
   output [15:0] Aaddr, Baddr,
-  output [15:0] dataWrtie,
+  output [15:0] ExCalResult,
   output [1:0] ExMemControl,
   input [15:0] AmemRead, BmemRead,
   output [175:0] registerValue,
   output [15:0] IfPC, IfIR,
   output [15:0] instructionTemp,
   output [3:0] registerS, registerM, IdRegisterT, MeRegisterT,
-  output [15:0] ExCalResult, MeCalResult
+  output [15:0] MeCalResult
 );
 
-wire [15:0] nextPC;//, IdIR;
+wire [15:0] nextPC, IdIR;
 wire [15:0] rs, rm;
 //wire [3:0] registerS, registerM;
 wire [1:0] /*ExMemControl, */ MeMemControl;
@@ -22,6 +22,15 @@ wire [3:0] /*IdRegisterT,*/ ExRegisterT;//, MeRegisterT;//, WbRegisterT;
 
 //assign IfPC = 16'hFFFF;
 //assign IfIR = 16'hEEEE;
+
+reg [15:0] AmemReadTemp;
+
+always @ (posedge clk or negedge rst)
+  if (!rst)
+    AmemReadTemp = 0;
+  else
+    AmemReadTemp = AmemRead;
+
 
 PCregister pc (
   clk, rst,
@@ -97,7 +106,7 @@ memAddressCalculator addrCalculator(
 
 meCalResultSelector MeCalResultMux (
   MeMemControl,
-  AmemRead,
+  AmemReadTemp,
   ExCalResult,
   MeCalResult
 );

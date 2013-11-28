@@ -5,7 +5,7 @@ module meCalResultSelector (
   output [15:0] MeCalResult
 );
 
-assign MeCalResult = MeMemControl == 2'b10? memDataRead : ExCalResult;
+assign MeCalResult = (MeMemControl == 2'b10)? memDataRead : ExCalResult;
 
 endmodule
 

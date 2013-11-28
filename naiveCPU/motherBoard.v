@@ -10,26 +10,26 @@ module motherBoard (
 
 wire [175:0] registerValue;
 wire [15:0] memAaddr, memBaddr, memAdataRead, memBdataRead;
+wire [1:0] memRW;
 wire [15:0] physicalMemAaddr, physicalMemBaddr;
-wire [15:0] ramAdataRead, ramBdataRead, romAdataReadn, romBdataRead;
+wire [15:0] ramAdataRead, ramBdataRead, romAdataRead, romBdataRead;
 wire [15:0] IfPC, IfIR;
 wire [15:0] ExCalResult, MeCalResult;
-wire [15:0] debug;
 
 wire [3:0] registerS, registerM, IdRegisterT, MeRegisterT;
 
-assign leddebug = {debug};
+assign leddebug = {memAdataRead};
 
 cpu naive (
   clkHand, rst,
   memAaddr, memBaddr,
-  memDataWrite, memRW,
+  ExCalResult, memRW,
   memAdataRead, memBdataRead,
   registerValue,
   IfPC, IfIR,
   debug,
   registerS, registerM, IdRegisterT, MeRegisterT,
-  ExCalResult, MeCalResult
+  MeCalResult
 );
 
 GraphicCard graphic (
@@ -61,8 +61,8 @@ memoryMapping mapingB (
 );
 
 memoryController memory(
-  clk, rst,
-  physicalMemAaddr, memDataWrite,
+  clkHand, 
+  physicalMemAaddr, ExCalResult,
   memRW,
   ramAdataRead,
   physicalMemBaddr,
@@ -73,7 +73,7 @@ memoryController memory(
 );
 
 romController rom (
-  clk, rst,
+  clk, 
   physicalRomAaddr,
   romAdataRead,
   physicalRomBaddr,
