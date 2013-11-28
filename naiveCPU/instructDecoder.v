@@ -1,14 +1,16 @@
 module instructionDecoder (
   input clk, rst,
   input [15:0] instruction,
+  output reg [15:0] instructionTemp,
   output reg [3:0] registerS, registerM, registerT,
   output reg [1:0] memControl
 );
 
-reg [15:0] instructionTemp;
-
-always @ (negedge clk)
-  instructionTemp = instruction;
+always @ (negedge clk or negedge rst)
+  if (!rst)
+    instructionTemp = 16'b0000100000000000; // nop
+  else
+    instructionTemp = instruction;
 
 always @ (posedge clk or negedge rst)
 begin
@@ -21,6 +23,7 @@ begin
     registerS = 0;
     registerM = 0;
     registerT = 0;
+    memControl = 2'b00; // IDLE
   end
   else
   begin
@@ -205,6 +208,13 @@ begin
           end
         endcase
       //5'b11111:                         // int
+		default:
+		begin
+        registerS = 0;
+        registerM = 0;
+        registerT = 0;
+        memControl = 2'b00; // IDLE
+		end
     endcase
   end
 end

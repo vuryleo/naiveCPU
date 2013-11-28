@@ -44,7 +44,7 @@ begin
   end
   else
   begin
-    if (!writeIndex)
+    if (writeIndex != 0)
       registers[writeIndex] = dataToWrite;
     if (!tWriteEnable)
       t = tToWrite;

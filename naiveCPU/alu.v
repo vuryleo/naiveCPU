@@ -1,17 +1,37 @@
 module alu(
   input clk, rst,
-  input[15:0] rs, rm,
-  input[15:0] currentPC, instruction,
+  input[15:0] rsIn, rmIn,
+  input[15:0] currentPCIn, instructionIn,
   output reg[15:0] res,
   output reg t_written, t
 );
+
+reg [15:0] currentPC, instruction, rs, rm;
 
 wire[15:0] imm16 = {8'd0, instruction[7:0]};
 wire[15:0] imm16s = {instruction[7] ? 8'hff : 8'h00, instruction[7:0]};
 wire[15:0] imm16from4s = {instruction[3] ? 8'hff : 8'h00, instruction[3:0]};
 wire[3:0] shift_imm4 = instruction[4:2] ? instruction[4:2] : 8;
 
-always @(negedge clk or negedge rst)
+always @ (negedge clk or negedge rst)
+begin
+  if (!rst)
+  begin
+    currentPC = 0;
+	 instruction = 16'b0000100000000000; // nop
+	 rs = 0;
+	 rm = 0;
+  end
+  else
+  begin
+    currentPC = currentPCIn;
+	 instruction = instructionIn;
+	 rs = rsIn;
+	 rm = rmIn;
+  end
+end
+
+always @(posedge clk or negedge rst)
 begin
   t_written = 1;
   t = 0;

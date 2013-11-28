@@ -6,13 +6,17 @@ module cpu (
   input [15:0] AmemRead, BmemRead,
   output [175:0] registerValue,
   output [15:0] IfPC, IfIR,
-  output [15:0] calResult
+  output [15:0] instructionTemp,
+  output [3:0] registerS, registerM, IdRegisterT, MeRegisterT,
+  output [15:0] ExCalResult, MeCalResult
 );
 
-wire [15:0] nextPC, IdIR;
+wire [15:0] nextPC;//, IdIR;
 wire [15:0] rs, rm;
+//wire [3:0] registerS, registerM;
 wire [1:0] IdMemControl, ExMemControl;
-wire [3:0] IdRegisterT, ExRegisterT, MeRegisterT, WbRegisterT;
+wire [3:0] /*IdRegisterT,*/ ExRegisterT;//, MeRegisterT;//, WbRegisterT;
+//wire [15:0] MeCalResult;
 
 //assign IfPC = 16'hFFFF;
 //assign IfIR = 16'hEEEE;
@@ -40,59 +44,60 @@ instructionReader reader (
 instructionDecoder decoder (
   clk, rst,
   IfIR,
+  instructionTemp,
   registerS, registerM, IdRegisterT,
   IdMemControl
 );
 
 forwarder IdIRforward (
-  clk,
+  clk, rst,
   IfIR,
   IdIR
 );
 
 forwarder2bit ExMemControlforward (
-  clk,
+  clk, rst,
   IdMemControl,
   ExMemControl
 );
 
 forwarder2bit MeMemControlforward (
-  clk,
+  clk, rst,
   ExMemControl,
   MeMemControl
 );
 
 forwarder4bit ExRegisterTforward (
-  clk,
+  clk, rst,
   IdRegisterT,
   ExRegisterT
 );
 
 forwarder4bit MeRegisterTforward (
-  clk,
+  clk, rst,
   ExRegisterT,
   MeRegisterT
 );
 
-forwarder4bit WbRegisterTforward (
-  clk,
-  MeRegisterT,
-  WbRegisterT
+forwarder MeCalResultforward (
+  clk, rst,
+  ExCalResult,
+  MeCalResult
 );
 
 alu calculator (
   clk, rst,
   rs, rm,
   IfPC, IdIR,
-  calResult
+  ExCalResult
 );
 
 Register registerFile (
   clk, rst,
   registerS, registerM,
   1, 0,
-  WbRegisterT,
-  calResult,
+  MeRegisterT,
+  MeCalResult,
   registerValue,
   rs, rm
 );

@@ -13,9 +13,12 @@ wire [15:0] memAaddr, memBaddr, memAdataRead, memBdataRead;
 wire [15:0] physicalMemAaddr, physicalMemBaddr;
 wire [15:0] ramAdataRead, ramBdataRead, romAdataReadn, romBdataRead;
 wire [15:0] IfPC, IfIR;
-wire [15:0] calResult;
+wire [15:0] ExCalResult, MeCalResult;
+wire [15:0] debug;
 
-assign leddebug = {ramAdataRead};
+wire [3:0] registerS, registerM, IdRegisterT, MeRegisterT;
+
+assign leddebug = {debug};
 
 cpu naive (
   clkHand, rst,
@@ -24,14 +27,17 @@ cpu naive (
   memAdataRead, memBdataRead,
   registerValue,
   IfPC, IfIR,
-  calResult
+  debug,
+  registerS, registerM, IdRegisterT, MeRegisterT,
+  ExCalResult, MeCalResult
 );
 
 GraphicCard graphic (
   clk, rst,
   registerValue,
   IfPC, IfIR,
-  calResult,
+  registerS, registerM, IdRegisterT, MeRegisterT,
+  ExCalResult, MeCalResult,
   vgaHs, vgaVs,
   vgaR, vgaG, vgaB
 );
