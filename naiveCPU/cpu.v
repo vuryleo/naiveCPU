@@ -15,6 +15,8 @@ wire [15:0] nextPC;//, IdIR;
 wire [15:0] rs, rm;
 //wire [3:0] registerS, registerM;
 wire [1:0] IdMemControl, ExMemControl;
+wire [15:0] originValueS, originValueM;
+wire [15:0] sourceValueS, sourceValueM;
 wire [3:0] /*IdRegisterT,*/ ExRegisterT;//, MeRegisterT;//, WbRegisterT;
 //wire [15:0] MeCalResult;
 
@@ -92,6 +94,38 @@ alu calculator (
   ExCalResult
 );
 
+byPass MeIdByPassS (
+  registerS,
+  originValueS,
+  MeRegisterT,
+  MeCalResult,
+  sourceValueS
+);
+
+byPass MeIdByPassM (
+  registerM,
+  originValueM,
+  MeRegisterT,
+  MeCalResult,
+  sourceValueM
+);
+
+byPass ExIdByPassS (
+  registerS,
+  sourceValueS,
+  ExRegisterT,
+  ExCalResult,
+  rs
+);
+
+byPass ExIdByPassM (
+  registerM,
+  sourceValueM,
+  ExRegisterT,
+  ExCalResult,
+  rm
+);
+
 Register registerFile (
   clk, rst,
   registerS, registerM,
@@ -99,7 +133,7 @@ Register registerFile (
   MeRegisterT,
   MeCalResult,
   registerValue,
-  rs, rm
+  originValueS, originValueM
 );
 
 endmodule
