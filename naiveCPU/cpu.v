@@ -34,25 +34,20 @@ wire [3:0] /*IdRegisterT,*/ ExRegisterT;//, MeRegisterT;//, WbRegisterT;
 //  else
 //    AmemReadTemp = AmemRead;
 
-
-PCregister pc (
-  nextPC,
-  IfPC
-);
-
 PCadder pcAdder (
   clk, rst,
-  IfPC,
+  nextPC,
   IfIR,
   rs,
   t,
   jumpControl,
-  nextPC
+  nextPC,
+  IfPC
 );
 
 instructionReader reader (
   clk, rst,
-  IfPC,
+  nextPC,
   BmemRead,
   Baddr,
   IfIR

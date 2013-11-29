@@ -5,7 +5,8 @@ module PCadder (
   input [15:0] rs,
   input t,
   input [2:0] jumpControl,
-  output [15:0] nextPC
+  output [15:0] nextPC,
+  output reg [15:0] currentPC
 );
 
 localparam  IDLE = 3'b000,
@@ -16,7 +17,7 @@ localparam  IDLE = 3'b000,
   JUMP = 3'b101,
   DB = 3'b110;
 
-reg [15:0] currentPC, instruction, jumpPC;
+reg [15:0] instruction, jumpPC;
 reg jump;
 
 wire[15:0] imm16s = {instruction[7] ? 8'hff : 8'h00, instruction[7:0]};
