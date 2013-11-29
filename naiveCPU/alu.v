@@ -110,7 +110,8 @@ begin
               //3'b001:                   // jrra
               3'b010:                   // mfpc
                 res = currentPC;
-              //3'b110:                   // jalr
+              3'b110:                   // jalr
+                res = currentPC;
             endcase
           5'b00010:                     // slt
           begin

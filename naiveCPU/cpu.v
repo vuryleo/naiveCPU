@@ -13,6 +13,9 @@ module cpu (
 
 wire [15:0] nextPC, IdIR;
 wire [15:0] rs, rm;
+wire t;
+wire tWriteEnable, tToWrite;
+wire [2:0] jumpControl;
 //wire [3:0] registerS, registerM;
 wire [1:0] /*ExMemControl, */ MeMemControl;
 wire [15:0] originValueS, originValueM;
@@ -41,6 +44,10 @@ PCregister pc (
 PCadder pcAdder (
   clk, rst,
   IfPC,
+  IfIR,
+  rs,
+  t,
+  jumpControl,
   nextPC
 );
 
@@ -93,7 +100,8 @@ alu calculator (
   clk, rst,
   rs, rm,
   IfPC, IdIR,
-  ExCalResult
+  ExCalResult,
+  tWriteEnable, tToWrite
 );
 
 memAddressCalculator addrCalculator(
@@ -146,7 +154,7 @@ byPass ExIdByPassM (
 Register registerFile (
   clk, rst,
   registerS, registerM,
-  1, 0,
+  tWriteEnable, tToWrite,
   MeRegisterT,
   MeCalResult,
   registerValue,

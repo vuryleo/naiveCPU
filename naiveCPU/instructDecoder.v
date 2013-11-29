@@ -2,8 +2,17 @@ module instructionDecoder (
   input clk, rst,
   input [15:0] instruction,
   output reg [15:0] instructionTemp,
-  output reg [3:0] registerS, registerM, registerT
+  output reg [3:0] registerS, registerM, registerT,
+  output reg [2:0] jumpControl;
 );
+
+localparam  IDLE = 3'b000,
+  EQZ = 3'b001,
+  NEZ = 3'b010,
+  TEQZ = 3'b011,
+  TNEZ = 3'b100,
+  JUMP = 3'b101,
+  DB = 3'b110;
 
 always @ (negedge clk or negedge rst)
   if (!rst)
@@ -16,11 +25,13 @@ begin
   registerS = 0;
   registerM = 0;
   registerT = 0;
+  jumpControl = 0;
   if (!rst) // the negedge of rst
   begin
     registerS = 0;
     registerM = 0;
     registerT = 0;
+    jumpControl = 0;
   end
   else
   begin
@@ -31,11 +42,18 @@ begin
         registerT = instructionTemp[10:8];
       end
       //5'b00001:                         // nop
-      //5'b00010:                         // b
+      5'b00010:                         // b
+        jumpControl = DB;
       5'b00100:                         // beqz
+      begin
         registerS = instructionTemp[10:8];
+        jumpControl = EQZ;
+      end
       5'b00101:                         // bnez
+      begin
         registerS = instructionTemp[10:8];
+        jumpControl = NEZ;
+      end
       5'b00110:                         // sll, srl, sra
       begin
         registerS = instructionTemp[7:5];
@@ -55,8 +73,10 @@ begin
         registerS = instructionTemp[10:8];
       5'b01100:                         // addsp, bteqz, btnez, mtsp, sw_rs
         case (instructionTemp[10:8])
-          //3'b000:                       // bteqz
-          //3'b001:                       // btnez
+          3'b000:                       // bteqz
+            jumpControl = TEQZ;
+          3'b001:                       // btnez
+            jumpControl = TNEZ;
           3'b010:                       // sw_rs
           begin
             registerS = 4'b1010;       // ra
@@ -115,14 +135,22 @@ begin
           5'b00000:                     // jalr, jr, jrra, mfpc
             case (instructionTemp[7:5])
               3'b000:                   // jr
+              begin
                 registerS = instructionTemp[10:8];
-              //3'b001:                   // jrra
+                jumpControl = JUMP;
+              end
+              3'b001:                   // jrra
+              begin
+                registerS = 4'b1010;
+                jumpControl = JUMP;
+              end
               3'b010:                   // mfpc
                 registerT = instructionTemp[10:8];
               3'b110:                   // jalr
               begin
                 registerS = instructionTemp[10:8];
                 registerT = 4'b1010;    // ra
+                jumpControl = JUMP;
               end
             endcase
           5'b00010:                     // slt
