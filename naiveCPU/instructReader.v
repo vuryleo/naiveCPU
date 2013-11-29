@@ -9,7 +9,7 @@ module instructionReader (
 always @ (negedge clk)
   IRaddr = currentPC;
 
-always @ (posedge clk or negedge rst)
+always @ (negedge rst or posedge clk)
   if (!rst)
     currentIR = 0;
   else

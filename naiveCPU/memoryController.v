@@ -21,7 +21,7 @@ reg [1:0] control;
 
 always @ (clk, Aaddr, rw, Baddr)
 begin
-  if (!clk) // negedge
+  if (clk) // negedge
   begin
     addr = Aaddr;
     control = rw;
@@ -35,7 +35,7 @@ end
 
 always @ (clk, dataRead)
 begin
-  if (!clk) // negedge
+  if (clk) // negedge
     AdataRead = dataRead;
   else // posedge
     BdataRead = dataRead;

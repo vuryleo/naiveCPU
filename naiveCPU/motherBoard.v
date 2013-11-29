@@ -9,6 +9,7 @@ module motherBoard (
 );
 
 wire [175:0] registerValue;
+wire [15:0] rs;
 wire [15:0] memAaddr, memBaddr, memAdataRead, memBdataRead;
 wire [1:0] memRW;
 wire [15:0] physicalMemAaddr, physicalMemBaddr;
@@ -18,7 +19,7 @@ wire [15:0] ExCalResult, MeCalResult;
 
 wire [3:0] registerS, registerM, IdRegisterT, MeRegisterT;
 
-assign leddebug = {memAdataRead};
+assign leddebug = {rs};
 
 cpu naive (
   clkHand, rst,
@@ -27,9 +28,9 @@ cpu naive (
   memAdataRead, memBdataRead,
   registerValue,
   IfPC, IfIR,
-  debug,
   registerS, registerM, IdRegisterT, MeRegisterT,
-  MeCalResult
+  MeCalResult,
+  rs
 );
 
 GraphicCard graphic (

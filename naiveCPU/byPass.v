@@ -9,4 +9,3 @@ module byPass (
 assign selectedValue = updateIndex == sourceIndex? updateValue : sourceValue;
 
 endmodule
-

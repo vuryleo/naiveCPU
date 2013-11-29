@@ -6,7 +6,7 @@ module Register (
   input [15:0] dataToWrite,
   // -- output to vga renderer
   output [175:0] registersVGA,
-  output readResultS, readResultM,
+  output [15:0] readResultS, readResultM,
   output tResuit
 );
 

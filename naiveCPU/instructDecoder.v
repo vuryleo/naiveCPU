@@ -3,7 +3,7 @@ module instructionDecoder (
   input [15:0] instruction,
   output reg [15:0] instructionTemp,
   output reg [3:0] registerS, registerM, registerT,
-  output reg [2:0] jumpControl;
+  output reg [2:0] jumpControl
 );
 
 localparam  IDLE = 3'b000,

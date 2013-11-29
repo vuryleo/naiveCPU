@@ -35,13 +35,13 @@ registerRenderer register3 (
   hit
 );
 
-//registerRenderer register4 (
-//  x, y,
-//  cx, cy + deltaY / 2,
-//  4, registers[111:96],
-//  hit
-//);
-//
+registerRenderer register4 (
+  x, y,
+  cx, cy + deltaY / 2,
+  4, registers[111:96],
+  hit
+);
+
 //registerRenderer register5 (
 //  x, y,
 //  cx, cy + deltaY + deltaY / 2,
