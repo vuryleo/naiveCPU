@@ -5,9 +5,10 @@ module PCadder (
   input [15:0] rs,
   input t,
   input [2:0] jumpControl,
-  output [15:0] nextPC,
-  output reg [15:0] currentPC
+  output [15:0] nextPC
 );
+
+reg [15:0] currentPC;
 
 localparam  IDLE = 3'b000,
   EQZ = 3'b001,
@@ -26,7 +27,7 @@ always @ (negedge clk or negedge rst)
   if (!rst)
   begin
     instruction = 16'b0000100000000000;
-	 currentPC = 0;
+	 currentPC = 16'hfffe;
   end
   else
   begin
