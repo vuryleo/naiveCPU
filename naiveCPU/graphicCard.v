@@ -9,18 +9,9 @@ module GraphicCard (
 );
 
 wire [10:0] x, y;
-reg clk25M;
-
-always @ (negedge clk, negedge rst)
-begin
-  if (!rst)
-    clk25M = 0;
-  else
-    clk25M = ~ clk25M;
-end
 
 VGAEngine VGAEngineM (
-  clk25M,
+  clk,
   rst,
   hs, vs,
   x, y

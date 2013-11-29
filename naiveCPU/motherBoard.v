@@ -19,10 +19,20 @@ wire [15:0] ExCalResult, MeCalResult;
 
 wire [3:0] registerS, registerM, IdRegisterT, MeRegisterT;
 
+reg clk25M;
+
+always @ (negedge clk, negedge rst)
+begin
+  if (!rst)
+    clk25M = 0;
+  else
+    clk25M = ~ clk25M;
+end
+
 assign leddebug = {rs};
 
 cpu naive (
-  clkHand, rst,
+  clk25M, rst,
   memAaddr, memBaddr,
   ExCalResult, memRW,
   memAdataRead, memBdataRead,
@@ -34,7 +44,7 @@ cpu naive (
 );
 
 GraphicCard graphic (
-  clk, rst,
+  clk25M, rst,
   registerValue,
   IfPC, IfIR,
   registerS, registerM, IdRegisterT, MeRegisterT,
@@ -62,7 +72,7 @@ memoryMapping mapingB (
 );
 
 memoryController memory(
-  clkHand, 
+  clk25M, 
   physicalMemAaddr, ExCalResult,
   memRW,
   ramAdataRead,
@@ -74,7 +84,7 @@ memoryController memory(
 );
 
 romController rom (
-  clk, 
+  clk25M, 
   physicalRomAaddr,
   romAdataRead,
   physicalRomBaddr,
