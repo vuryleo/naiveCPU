@@ -4,6 +4,9 @@ module cpu (
   output [15:0] ExCalResult,
   output [1:0] ExMemControl,
   input [15:0] AmemRead, BmemRead,
+  input hardwareInterruptSignal,
+  input [3:0] hardwareInterruptIndex,
+  // vga debug signals
   output [175:0] registerValue,
   output [15:0] nextPC, IfIR,
   output [3:0] registerS, registerM, IdRegisterT, MeRegisterT,
@@ -12,6 +15,11 @@ module cpu (
 );
 
 wire [15:0] IfPC, IdIR, IdPC;
+wire interruptSignal, interruptOccurs, eret;
+wire softwareInterruptSignal;
+wire [3:0] softwareInterruptIndex;
+wire [15:0] interruptPC;
+wire [15:0] normalNextPC;
 wire [15:0] rs, rm;
 wire t;
 wire tWriteEnable, tToWrite;
@@ -41,7 +49,20 @@ PCadder pcAdder (
   rs,
   t,
   jumpControl,
+  interruptOccurs,
+  interruptPC,
+  normalNextPC,
   nextPC
+);
+
+interrupt interruptM (
+  clk, rst,
+  normalNextPC,
+  interruptSignal,
+  interruptIndex,
+  eret,
+  interruptOccurs,
+  interruptPC
 );
 
 instructionReader reader (
@@ -52,12 +73,24 @@ instructionReader reader (
   IfIR
 );
 
+interruptArbitration arbitration (
+  hardwareInterruptSignal,
+  hardwareInterruptIndex,
+  softwareInterruptSignal,
+  softwareInterruptIndex,
+  interruptSignal,
+  interruptIndex
+);
+
 instructionDecoder decoder (
   clk, rst,
   IfIR,
   instructionTemp,
   registerS, registerM, IdRegisterT,
-  jumpControl
+  jumpControl,
+  softwareInterruptSignal,
+  softwareInterruptIndex,
+  eret
 );
 
 forwarder IfPCforward (

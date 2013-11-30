@@ -3,6 +3,8 @@ module motherBoard (
   inout [15:0] memDataBus,
   output [17:0] memAddrBus,
   output memRead, memWrite, memEnable,
+  input keyDown,
+  input [15:0] inputValue,
   output vgaHs, vgaVs,
   output [2:0] vgaR, vgaG, vgaB,
   output [15:0] leddebug
@@ -16,6 +18,9 @@ wire [15:0] physicalMemAaddr, physicalMemBaddr;
 wire [15:0] ramAdataRead, ramBdataRead, romAdataRead, romBdataRead;
 wire [15:0] IfPC, IfIR;
 wire [15:0] ExCalResult, MeCalResult;
+wire hardwareInterruptSignal;
+wire [3:0] hardwareInterruptIndex;
+wire [15:0] keyboardData;
 
 wire [3:0] registerS, registerM, IdRegisterT, MeRegisterT;
 
@@ -36,6 +41,7 @@ cpu naive (
   memAaddr, memBaddr,
   ExCalResult, memRW,
   memAdataRead, memBdataRead,
+  hardwareInterruptSignal, hardwareInterruptIndex,
   registerValue,
   IfPC, IfIR,
   registerS, registerM, IdRegisterT, MeRegisterT,
@@ -59,6 +65,7 @@ memoryMapping mapingA (
   physicalRomAaddr,
   ramAdataRead,
   romAdataRead,
+  keyboardData,
   memAdataRead
 );
 
@@ -68,11 +75,12 @@ memoryMapping mapingB (
   physicalRomBaddr,
   ramBdataRead,
   romBdataRead,
+  keyboardData,
   memBdataRead
 );
 
 memoryController memory(
-  clk25M, 
+  clk25M,
   physicalMemAaddr, ExCalResult,
   memRW,
   ramAdataRead,
@@ -84,11 +92,18 @@ memoryController memory(
 );
 
 romController rom (
-  clk25M, 
+  clk25M,
   physicalRomAaddr,
   romAdataRead,
   physicalRomBaddr,
   romBdataRead
+);
+
+keyboard fakeKeyboard (
+  clk25M, rst,
+  keyDown, inputValue,
+  hardwareInterruptSignal, hardwareInterruptIndex,
+  keyboardData
 );
 
 endmodule

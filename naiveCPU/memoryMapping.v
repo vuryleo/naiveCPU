@@ -4,28 +4,39 @@ module memoryMapping (
   output reg [15:0] actualRomAddr,
   input [15:0] ramData,
   input [15:0] romData,
-  output [15:0] realData
+  input [15:0] keyboardData,
+  output reg [15:0] realData
 );
 
-reg index;
+localparam RAM = 2'b00,
+  KEYBOARD = 2'b01,
+  ROM = 2'b10;
+
+reg [1:0] index;
 
 always @ (virtualAddr)
   if (!virtualAddr[15]) // physical mem
   begin
     actualRamAddr = virtualAddr >> 1;
-    index = 0;
+    index = RAM;
   end
   else if (virtualAddr[15:8] == 8'hFF) // rom
   begin
     actualRomAddr = {8'h00, virtualAddr[7:0]};
-    index = 1;
+    index = ROM;
+  end
+  else if (virtualAddr == 8'hFE00) // keyboard
+  begin
+    index = KEYBOARD;
   end
 
-selector mux (
-  index,
-  ramData,
-  romData,
-  realData
-);
+always @ (*)
+  case (index)
+    PHYSICALMEM:
+      realData = ramData;
+    KEYBOARD:
+      realData = keyboardData;
+    ROM:
+      realData = romData;
 
 endmodule

@@ -5,6 +5,9 @@ module PCadder (
   input [15:0] rs,
   input t,
   input [2:0] jumpControl,
+  input interruptSignal,
+  input [15:0] interruptPC,
+  output [15:0] normalNextPC,
   output [15:0] nextPC
 );
 
@@ -85,6 +88,7 @@ begin
   end
 end
 
-assign nextPC = jump? jumpPC : currentPC + 2;
+assign normalNextPC = jump? jumpPC : currentPC + 2;
+assign nextPC = interruptSignal? normalNextPC : interruptPC;
 
 endmodule
