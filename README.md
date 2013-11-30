@@ -25,7 +25,9 @@ RA ==> "1010"
 Memory Mapping
 --------------
 0000 ~ 7FFF physical memory, so only 31KB of memory is available
-FF00 ~ FFFF BIOS
+F000 ~ FDFF graphic memory
+FE00 keyboard input
+FF00 ~ FFFF rom
 
 VGA
 ---
@@ -46,3 +48,18 @@ naiveKernel
 ===========
 naiveKernel is a basic OS kernel that implements serval system calls, and is embedded a text editor and a interpreter.
 
+Memory
+------
+0000 ~ 0003 boot instruction *Just a b instruction that point to real program*
+0004 ~ 003f interrupt vector table
+0200 stack bottom
+0400 I/O buffer start
+
+Interrupts
+----------
+0 -> reserved
+1 -> load keyboard input into I/O buffer
+2 -> read I/O buffer
+3 -> write to graphic memory
+
+For interrupts' detail, please refer to wiki.
