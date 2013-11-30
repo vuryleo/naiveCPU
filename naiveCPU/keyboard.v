@@ -14,7 +14,7 @@ always @ (posedge clk or negedge rst)
     delay = 0;
   else
   begin
-    if (delay = 1000000)
+    if (delay == 1000000)
       delay = 0;
     else
       delay = delay + 1;
@@ -32,7 +32,7 @@ always @ (posedge clk or negedge rst)
     if (delay == 0)
     begin
       interruptSignal = keyDown;
-      interruptIndex = 0;
+      interruptIndex = 1;
       data = inputValue;
     end
     else

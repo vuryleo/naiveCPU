@@ -32,11 +32,12 @@ always @ (virtualAddr)
 
 always @ (*)
   case (index)
-    PHYSICALMEM:
+    RAM:
       realData = ramData;
     KEYBOARD:
       realData = keyboardData;
     ROM:
       realData = romData;
+  endcase
 
 endmodule

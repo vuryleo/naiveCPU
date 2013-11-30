@@ -69,3 +69,22 @@ NET "leddebug[12]"  LOC = B13;
 NET "leddebug[13]"  LOC = D13;
 NET "leddebug[14]"  LOC = E13;
 NET "leddebug[15]"  LOC = A14;
+
+NET "inputValue[0]" LOC = T7;
+NET "inputValue[1]" LOC = R7;
+NET "inputValue[2]" LOC = U8;
+NET "inputValue[3]" LOC = V4;
+NET "inputValue[4]" LOC = V3;
+NET "inputValue[5]" LOC = V2;
+NET "inputValue[6]" LOC = U1;
+NET "inputValue[7]" LOC = R4;
+NET "inputValue[8]" LOC = R1;
+NET "inputValue[9]" LOC = N2;
+NET "inputValue[10]" LOC = N1;
+NET "inputValue[11]" LOC = M1;
+NET "inputValue[12]" LOC = K7;
+NET "inputValue[13]" LOC = K2;
+NET "inputValue[14]" LOC = J7;
+NET "inputValue[15]" LOC = J6;
+
+NET "keyDown" LOC = U11;
