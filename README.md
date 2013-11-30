@@ -34,3 +34,15 @@ The left part will be the registers storage, the right part will be the result c
 So, developers will spot which part was going wrong very easily.
 Though it spend lots of compiling time and lots of logic gate, it is effective in most situations.
 
+Interrupt
+---------
+In order to support hardware interrupt, an extra instruction is introduced.
+It is called `eret`. And its binary format is `1000000000000000`, and hexadecimal format is `8000`.
+When executing this instruction, CPU will clear the interrupt signal and reset PC to EPC that stored when interrupt occers.
+
+*Notice* `eret` instruction is a jump instruction, so a delay slot is required.
+
+naiveKernel
+===========
+naiveKernel is a basic OS kernel that implements serval system calls, and is embedded a text editor and a interpreter.
+
