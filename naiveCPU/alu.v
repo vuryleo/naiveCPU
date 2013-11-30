@@ -91,6 +91,7 @@ begin
       end
       5'b01111:                         // move
         res = rs;
+      //5'b10000:                         // eret
       //5'b10010:                         // lw_sp
       //5'b10011:                         // lw
       5'b11010:                         // sw_sp

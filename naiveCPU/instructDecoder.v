@@ -3,7 +3,10 @@ module instructionDecoder (
   input [15:0] instruction,
   output reg [15:0] instructionTemp,
   output reg [3:0] registerS, registerM, registerT,
-  output reg [2:0] jumpControl
+  output reg [2:0] jumpControl,
+  output reg interruptSignal,
+  output reg [3:0] interruptIndex,
+  output reg eret
 );
 
 localparam  IDLE = 3'b000,
@@ -26,12 +29,18 @@ begin
   registerM = 0;
   registerT = 0;
   jumpControl = 0;
+  interruptSignal = 1;
+  interruptIndex = 0;
+  eret = 1;
   if (!rst) // the negedge of rst
   begin
     registerS = 0;
     registerM = 0;
     registerT = 0;
     jumpControl = 0;
+    interruptSignal = 1;
+    interruptIndex = 0;
+    eret = 1;
   end
   else
   begin
@@ -104,6 +113,8 @@ begin
         registerS = instructionTemp[7:5];
         registerT = instructionTemp[10:8];
       end
+      5'b10000:                         // eret
+        eret = 0;
       5'b10010:                         // lw_sp
       begin
         registerM = 4'b1001;            // sp
@@ -228,13 +239,21 @@ begin
             registerT = 4'b1000;        // ih
           end
         endcase
-      //5'b11111:                         // int
-		default:
-		begin
+      5'b11111:                         // int
+      begin
+        interruptSignal = 0;
+        interruptIndex = instructionTemp[3:0];
+      end
+      default:
+      begin
         registerS = 0;
         registerM = 0;
         registerT = 0;
-		end
+        jumpControl = 0;
+        interruptSignal = 1;
+        interruptIndex = 0;
+        eret = 1;
+      end
     endcase
   end
 end
