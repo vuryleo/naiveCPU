@@ -25,7 +25,7 @@ always @ (virtualAddr)
     actualRomAddr = {8'h00, virtualAddr[7:0]};
     index = ROM;
   end
-  else if (virtualAddr == 8'hFE00) // keyboard
+  else if (virtualAddr == 16'hFE00) // keyboard
   begin
     index = KEYBOARD;
   end

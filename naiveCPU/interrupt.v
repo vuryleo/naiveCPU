@@ -8,18 +8,25 @@ module interrupt (
   output reg [15:0] interruptPC
 );
 
-reg interruptEnable;
 reg [15:0] currentPC, returnPC;
+reg interruptEnable;
+reg clear;
 
 always @ (negedge clk or negedge rst)
   if (!rst)
+  begin
     currentPC = 0;
+	 clear = 1;
+  end
   else
+  begin
     currentPC = currentPCIn;
+	 clear = interruptOccurs;
+  end
 
-always @ (*)
+always @ (clk or rst or eret or interruptSignal or interruptIndex)
+//always @ (posedge clk or negedge rst)
 begin
-  interruptOccurs = 1;
   if (!rst)
   begin
     interruptOccurs = 1;
@@ -28,24 +35,26 @@ begin
     interruptEnable = 0;
   end
   else
-  begin
-    if (!eret) // it returned
     begin
-      interruptOccurs = 0;
-      interruptEnable = 0;
-      interruptPC = returnPC;
-    end
-    else
-    begin
-      if (!interruptSignal && !interruptEnable)
+      if (!eret) // it returned
       begin
         interruptOccurs = 0;
-        interruptPC = {12'h000, interruptIndex * 4};
-        returnPC = currentPC;
-        interruptEnable = 1;
+        interruptEnable = 0;
+        interruptPC = returnPC;
+      end
+      else
+      begin
+        if (!interruptSignal && !interruptEnable)
+        begin
+          interruptOccurs = 0;
+          interruptPC = {12'h000, interruptIndex * 4};
+          returnPC = currentPC;
+          interruptEnable = 1;
+        end
+		  else if (!clear)
+		    interruptOccurs = 1;
       end
     end
-  end
 end
 
 endmodule

@@ -7,7 +7,7 @@ module interruptArbitration(
   output [3:0] interruptIndex
 );
 
-assign interruptSignal = softwareInterrupt && hardwareInterrupt;
+assign interruptSignal = softwareInterrupt & hardwareInterrupt;
 assign interruptIndex = hardwareInterrupt? softwareInterruptIndex : hardwareInterruptIndex;
 
 endmodule

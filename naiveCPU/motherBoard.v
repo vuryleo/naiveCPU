@@ -11,7 +11,6 @@ module motherBoard (
 );
 
 wire [175:0] registerValue;
-wire [15:0] rs;
 wire [15:0] memAaddr, memBaddr, memAdataRead, memBdataRead;
 wire [1:0] memRW;
 wire [15:0] physicalMemAaddr, physicalMemBaddr;
@@ -21,6 +20,7 @@ wire [15:0] ExCalResult, MeCalResult;
 wire hardwareInterruptSignal;
 wire [3:0] hardwareInterruptIndex;
 wire [15:0] keyboardData;
+wire [15:0] interruptPC;
 
 wire [3:0] registerS, registerM, IdRegisterT, MeRegisterT;
 
@@ -34,10 +34,10 @@ begin
     clk25M = ~ clk25M;
 end
 
-assign leddebug = {rs};
+assign leddebug = {interruptPC};
 
 cpu naive (
-  clk25M, rst,
+  clkHand, rst,
   memAaddr, memBaddr,
   ExCalResult, memRW,
   memAdataRead, memBdataRead,
@@ -46,7 +46,7 @@ cpu naive (
   IfPC, IfIR,
   registerS, registerM, IdRegisterT, MeRegisterT,
   MeCalResult,
-  rs
+  interruptPC
 );
 
 GraphicCard graphic (
@@ -80,7 +80,7 @@ memoryMapping mapingB (
 );
 
 memoryController memory(
-  clk25M,
+  clkHand,
   physicalMemAaddr, ExCalResult,
   memRW,
   ramAdataRead,
@@ -92,7 +92,7 @@ memoryController memory(
 );
 
 romController rom (
-  clk25M,
+  clkHand,
   physicalRomAaddr,
   romAdataRead,
   physicalRomBaddr,

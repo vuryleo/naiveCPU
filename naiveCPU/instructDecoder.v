@@ -1,7 +1,6 @@
 module instructionDecoder (
   input clk, rst,
   input [15:0] instruction,
-  output reg [15:0] instructionTemp,
   output reg [3:0] registerS, registerM, registerT,
   output reg [2:0] jumpControl,
   output reg interruptSignal,
@@ -16,6 +15,8 @@ localparam  IDLE = 3'b000,
   TNEZ = 3'b100,
   JUMP = 3'b101,
   DB = 3'b110;
+
+reg [15:0] instructionTemp;
 
 always @ (negedge clk or negedge rst)
   if (!rst)

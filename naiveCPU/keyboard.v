@@ -4,10 +4,12 @@ module keyboard (
   input [15:0] inputValue,
   output reg interruptSignal,
   output reg [3:0] interruptIndex,
-  output reg [15:0] data
+  output [15:0] data
 );
 
 reg [31:0] delay;
+
+assign data = inputValue;
 
 always @ (posedge clk or negedge rst)
   if (!rst)
@@ -25,7 +27,6 @@ always @ (posedge clk or negedge rst)
   begin
     interruptSignal = 1;
     interruptIndex = 0;
-    data = 0;
   end
   else
   begin
@@ -33,13 +34,11 @@ always @ (posedge clk or negedge rst)
     begin
       interruptSignal = keyDown;
       interruptIndex = 1;
-      data = inputValue;
     end
     else
     begin
       interruptSignal = 1;
       interruptIndex = 0;
-      data = 0;
     end
   end
 
