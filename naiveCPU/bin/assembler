@@ -2,56 +2,65 @@
 require 'optparse'
 
 class Assembler
+  def hex i, w
+    i.to_i(16) % (1 << w)
+  end
+
   def xi op, rx, i
-    op << 11 | rx << 8 | i
+    op << 11 | rx.to_i << 8 | hex(i, 8)
   end
 
   def xy5 op, funct, rx, ry
-    op << 11 | rx << 8 | ry << 5 | funct
+    op << 11 | rx.to_i << 8 | ry.to_i << 5 | funct
   end
 
   def xyi op, rx, ry, i
-    op << 11 | rx << 8 | ry << 5 | i
+    op << 11 | rx.to_i << 8 | ry.to_i << 5 | hex(i, 5)
   end
 
   def xyz2 op, funct, rx, ry, rz
-    op << 11 | rx << 8 | ry << 5 | rz << 2 | funct
+    op << 11 | rx.to_i << 8 | ry.to_i << 5 | rz.to_i << 2 | funct
   end
 
   def prefix3 op, funct, i
-    op << 11 | funct << 8 | i
+    op << 11 | funct << 8 | hex(i, 8)
   end
 
   def x8 op, suffix, rx
-    op << 11 | rx << 8 | suffix
+    op << 11 | rx.to_i << 8 | suffix
   end
 
   def xyi2 op, suffix, rx, ry, i
-    op << 11 | rx << 8 | ry << 5 | i << 2 | suffix
+    op << 11 | rx.to_i << 8 | ry.to_i << 5 | hex(i, 3) << 2 | suffix
   end
 
   def b opname, line
     if [:beqz, :bnez].include? opname
-      unless line =~ /^r(\w+) (\w+)$/
+      unless line =~ /^r(\w+) ([-\w]+)$/
         STDERR.puts "Format error: #{line}"
         abort
       end
       rx = $1.to_i
       lab = $2
     else
-      unless line =~ /^(\w+)$/
+      unless line =~ /^([-\w]+)$/
         STDERR.puts "Format error: #{line}"
         abort
       end
       lab = $1
     end
 
-    unless @labels[lab]
-      STDERR.puts "Label not found: #{line}"
-      abort
+    if lab =~ /\A-?\d+\z/
+      off = lab.to_i 16
+    else
+      if @labels[lab]
+        off = @labels[lab] - (@pc + 2)
+      else
+        STDERR.puts "Label not found: #{line}"
+        abort
+      end
     end
 
-    off = @labels[lab] - (@pc + 2)
     w = opname == 'b' ? 11 : 8
     if off < -1 << w-1 or off >= 1 << w-1
       STDERR.puts "Branch distance too large: #{line}"
@@ -75,17 +84,17 @@ class Assembler
   def initialize options
     @options = options
     @@cat ||= {
-      xi: /^r(\d+) (\w+)$/,
+      xi: /^r(\d+) ([-\w]+)$/,
       xy5: /^r(\d+) r(\d+)$/,
-      xyi: /^r(\d+) r(\d+) (\w+)$/,
-      xyi2: /^r(\d+) r(\d+) (\w+)$/,
+      xyi: /^r(\d+) r(\d+) ([-\w]+)$/,
+      xyi2: /^r(\d+) r(\d+) ([-\w]+)$/,
       xyz2: /^r(\d+) r(\d+) r(\d+)$/,
       prefix3: /^(\w+)$/,
       x8: /^r(\d+)$/,
     }
     @@inst ||= {
       addiu: [:xi, 0b01001],
-      addiu3: [/r(\d+) r(\d+) (\w+)/, ->rx,ry,i{ 0b01000<<11 | rx<<8 | ry<<5 | i }],
+      addiu3: [/r(\d+) r(\d+) ([-\w]+)/, ->rx,ry,i{ 0b01000<<11 | rx.to_i<<8 | ry.to_i<<5 | hex(i, 4) }],
       addsp: [:prefix3, 0b01100, 0b011],
       addu: [:xyz2, 0b11100, 0b01],
       and: [:xy5, 0b11101, 0b01100],
@@ -96,7 +105,7 @@ class Assembler
       btnez: [:b],
       cmp: [:xy5, 0b11101, 0b01010],
       cmpi: [:xi, 0b01110],
-      int: [/^(\w+)$/, ->i{ 0b11111 << 11 | i }],
+      int: [/^(\w+)$/, ->i{ 0b11111 << 11 | i.to_i(16) }],
       jalr: [:x8, 0b11101, 0b11000000],
       jr: [:x8, 0b11101, 0b00000000],
       jrra: [/^$/, ->{ 0b1110100000100000 }],
@@ -107,7 +116,7 @@ class Assembler
       mfpc: [:x8, 0b11101, 0b01000000],
       move: [:xy5, 0b01111, 0b00000],
       mtih: [:x8, 0b11110, 0b00000001],
-      mtsp: [/^r(\w+)$/, ->rx{ 0b01100100 << 8 | rx << 5 }],
+      mtsp: [/^r(\w+)$/, ->rx{ 0b01100100 << 8 | rx.to_i << 5 }],
       neg: [:xy5, 0b11101, 0b01011],
       not: [:xy5, 0b11101, 0b01111],
       nop: [/^$/, ->{ 0b0000100000000000 }],
@@ -165,11 +174,11 @@ class Assembler
                  send type, opname, args.join(' ')
                when Symbol
                  error 'Format error' unless @@cat[type] =~ args.join(' ')
-                 operands += $~.captures.map {|x| x.to_i 16 }
+                 operands += $~.captures
                  send type, *operands
                when Regexp
                  error 'Format error' unless type =~ args.join(' ')
-                 operands[0][* $~.captures.map {|x| x.to_i 16 }]
+                 operands[0][* $~.captures]
                end
       if @options[:hex] || @options[:binary]
         STDOUT.write (@options[:hex] ? '%04x' : '%016b') % opcode
