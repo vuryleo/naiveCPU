@@ -16,7 +16,7 @@ sll r1 r1 0
 addiu3 r1 r2 4
 sw r1 r2 0
 sw r1 r2 2
-b textedit:
+b textedit
 nop
 circle: b circle
 nop
@@ -70,8 +70,8 @@ li r4 f0
 sll r4 r4 0
 sll r2 r2 7
 sll r3 r3 1
-addu r2 r4
-addu r3 r4
+addu r2 r4 r4
+addu r3 r4 r4
 sw r4 r1 0
 lw_sp r4 0
 eret
@@ -87,10 +87,10 @@ nop
 bnez r2 readchar
 nop
 move r3 r5
-sll r3 6
-addu r6 r3
-sll r3 1
-addu r4 r3
+sll r3 r3 6
+addu r6 r3 r3
+sll r3 r3 1
+addu r4 r3 r3
 sw r3 r1 0
 move r2 r5
 move r3 r6
