@@ -11,7 +11,7 @@ module motherBoard (
 );
 
 wire [175:0] registerValue;
-wire [15:0] memAaddr, memBaddr, memAdataRead, memBdataRead;
+wire [15:0] memAaddr, memBaddr, memAdataRead, memBdataRead, MeMemResult;
 wire [1:0] memRW;
 wire [15:0] physicalMemAaddr, physicalMemBaddr;
 wire [15:0] ramAdataRead, ramBdataRead, romAdataRead, romBdataRead;
@@ -24,7 +24,7 @@ wire [15:0] keyboardData;
 
 wire [3:0] registerS, registerM, IdRegisterT, MeRegisterT;
 
-reg clk25M;
+reg clk25M, clk12M;
 
 always @ (negedge clk, negedge rst)
 begin
@@ -34,12 +34,18 @@ begin
     clk25M = ~ clk25M;
 end
 
+always @ (negedge clk25M or negedge rst)
+  if (!rst)
+    clk12M = 0;
+  else
+    clk12M = ~ clk12M;
+
 assign leddebug = {memAdataRead};
 
 cpu naive (
-  clkHand, rst,
+  clk12M, rst,
   memAaddr, memBaddr,
-  ExCalResult, memRW,
+  ExCalResult, MeMemResult, memRW,
   memAdataRead, memBdataRead,
   hardwareInterruptSignal, hardwareInterruptIndex,
   registerValue,
@@ -79,8 +85,8 @@ memoryMapping mapingB (
 );
 
 memoryController memory(
-  clkHand,
-  physicalMemAaddr, ExCalResult,
+  clk12M,
+  physicalMemAaddr, MeMemResult,
   memRW,
   ramAdataRead,
   physicalMemBaddr,
@@ -91,7 +97,7 @@ memoryController memory(
 );
 
 romController rom (
-  clkHand,
+  clk12M,
   physicalRomAaddr,
   romAdataRead,
   physicalRomBaddr,
@@ -99,7 +105,7 @@ romController rom (
 );
 
 keyboard fakeKeyboard (
-  clk25M, rst,
+  clk12M, rst,
   keyDown, inputValue,
   hardwareInterruptSignal, hardwareInterruptIndex,
   keyboardData

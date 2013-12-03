@@ -7,21 +7,21 @@ module meCalResultSelector (
 );
 
 reg [15:0] ExCalResult;
-reg [15:0] MeReadResult;
+//reg [15:0] MeReadResult;
 
 always @ (negedge clk or negedge rst)
   if (!rst)
   begin
     ExCalResult = 0;
-    MeReadResult = 0;
+    //MeReadResult = 0;
   end
   else
   begin
     ExCalResult = ExCalResultIn;
-    MeReadResult = memDataRead;
+    //MeReadResult = memDataRead;
   end
 
-assign MeCalResult = (MeMemControl == 2'b10)? MeReadResult : ExCalResult;
+assign MeCalResult = (MeMemControl == 2'b10)? memDataRead : ExCalResult;
 
 endmodule
 
