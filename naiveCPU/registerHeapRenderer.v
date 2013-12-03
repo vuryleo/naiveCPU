@@ -35,12 +35,12 @@ registerRenderer register3 (
   hit
 );
 
-registerRenderer register4 (
-  x, y,
-  cx, cy + deltaY / 2,
-  4, registers[111:96],
-  hit
-);
+//registerRenderer register4 (
+//  x, y,
+//  cx, cy + deltaY / 2,
+//  4, registers[111:96],
+//  hit
+//);
 
 //registerRenderer register5 (
 //  x, y,
@@ -63,4 +63,18 @@ registerRenderer register4 (
 //  hit
 //);
 //
+//registerRenderer register8 (
+//  x, y,
+//  cx, cy + deltaY * 3 + deltaY / 2,
+//  8, registers[47:32],
+//  hit
+//);
+//
+registerRenderer register9 (
+  x, y,
+  cx, cy + deltaY * 3 + deltaY / 2,
+  9, registers[31:16],
+  hit
+);
+
 endmodule

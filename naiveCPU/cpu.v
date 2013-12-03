@@ -11,7 +11,7 @@ module cpu (
   output [15:0] nextPC, IfIR,
   output [3:0] registerS, registerM, IdRegisterT, MeRegisterT,
   output [15:0] MeCalResult,
-  output [15:0] interruptPC
+  output [15:0] rs
 );
 
 wire [15:0] IfPC, IdIR, IdPC;
@@ -19,15 +19,15 @@ wire interruptSignal, interruptOccurs, eret;
 wire [3:0] interruptIndex;
 wire softwareInterruptSignal;
 wire [3:0] softwareInterruptIndex;
-//wire [15:0] interruptPC;
+wire [15:0] interruptPC;
 wire [15:0] normalNextPC;
-wire [15:0] rs, rm;
+wire [15:0] /*rs,*/ rm;
 wire t;
 wire tWriteEnable, tToWrite;
 wire [2:0] jumpControl;
 //wire [3:0] registerS, registerM;
 wire [1:0] /*ExMemControl, */ MeMemControl;
-wire [15:0] /*originValueS,*/ originValueM;
+wire [15:0] originValueS, originValueM;
 wire [15:0] sourceValueS, sourceValueM;
 wire [3:0] /*IdRegisterT,*/ ExRegisterT;//, MeRegisterT;
 //wire [15:0] MeCalResult;

@@ -20,7 +20,7 @@ wire [15:0] ExCalResult, MeCalResult;
 wire hardwareInterruptSignal;
 wire [3:0] hardwareInterruptIndex;
 wire [15:0] keyboardData;
-wire [15:0] interruptPC;
+//wire [15:0] interruptPC;
 
 wire [3:0] registerS, registerM, IdRegisterT, MeRegisterT;
 
@@ -34,7 +34,7 @@ begin
     clk25M = ~ clk25M;
 end
 
-assign leddebug = {interruptPC};
+assign leddebug = {memAdataRead};
 
 cpu naive (
   clkHand, rst,
@@ -45,8 +45,7 @@ cpu naive (
   registerValue,
   IfPC, IfIR,
   registerS, registerM, IdRegisterT, MeRegisterT,
-  MeCalResult,
-  interruptPC
+  MeCalResult
 );
 
 GraphicCard graphic (
