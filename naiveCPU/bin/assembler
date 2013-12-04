@@ -1,219 +1,469 @@
 #!/usr/bin/env ruby
+require 'parslet'
 require 'optparse'
 
+$xyi_ops = ['lw', 'sw', 'addiu3']
+$xyi2_ops = ['sll', 'sra', 'srl']
+
+class Parser < Parslet::Parser
+  rule(:s) { match[' \t'].repeat(1) }
+  rule(:s?) { match[' \t'].repeat }
+  rule(:lf) { str("\n") }
+  rule(:lfs) { s? >> lf >> (s|lf).repeat }
+  rule(:lfs?) { (s|lf).repeat }
+  rule(:sc) { s | (s? >> str(',') >> s?) }
+  rule(:hex) { match['-0-9a-fA-F'].repeat(1) }
+  rule(:imm) { hex.as(:imm) }
+  rule(:reg) { str('r') >> match['0-7'].as(:reg) }
+  def strs ss
+    ss.map {|s| str(s)}.inject {|x,y| x | y }
+  end
+
+  xi_ops = ['addiu', 'cmpi', 'li', 'lw_sp', 'sltui', 'sw_sp']
+  rule(:xi) { strs(xi_ops).as(:xi) >> s >> reg.as(:rx) >> sc >> imm }
+
+  xy5_ops = ['and', 'cmp', 'move', 'neg', 'not', 'or', 'sllv', 'sltu', 'slt', 'srav', 'srlv', 'xor']
+  rule(:xy5) { strs(xy5_ops).as(:xy5) >> s >> reg.as(:rx) >> sc >> reg.as(:ry) }
+
+  rule(:xyi) { strs($xyi_ops+$xyi2_ops).as(:xyi) >> s >> reg.as(:rx) >> sc >> reg.as(:ry) >> sc >> imm }
+
+  xyz2_ops = ['addu', 'subu']
+  rule(:xyz2) { strs(xyz2_ops).as(:xyz2) >> s >> reg.as(:rx) >> sc >> reg.as(:ry) >> sc >> reg.as(:rz) }
+
+  prefix3_ops = ['addsp']
+  rule(:prefix3) { strs(prefix3_ops).as(:prefix3) >> s >> imm }
+
+  x8_ops = ['jalr', 'jr', 'mfih', 'mfpc', 'mtih']
+  rule(:x8) { strs(x8_ops).as(:x8) >> s >> reg.as(:rx) }
+
+  rule(:int) { str('int').as(:int) >> s >> imm }
+  rule(:mtsp) { str('mtsp').as(:mtsp) >> s >> reg.as(:rx) }
+
+  rule(:branch) {
+    jump = (hex | ident.as(:label)).as(:jump)
+    strs(['beqz', 'bnez']).as(:b) >> s >> reg >> sc >> jump |
+      strs(['bteqz', 'btnez', 'b']).as(:b) >> s >> jump
+  }
+
+  rule(:single) { strs(['eret', 'jrra', 'nop']).as(:single) }
+
+  rule(:ident) { match('\w').repeat }
+
+  rule(:inst) {
+    x = (xi | xy5 | xyi | xyz2 | x8 | prefix3 | single | int | mtsp | branch).as(:inst)
+    ident.as(:label) >> s? >> str(':') >> s? >> x | x
+  }
+
+  def line x
+    str(x) >> lfs
+  end
+
+  rule(:condition) {
+    op = strs ['<=', '>=', '<', '>', '==', '!=']
+    str('.if') >> s >> (reg.as(:src) >> s? >> op.as(:op) >> s? >> (reg | hex).as(:dst)).as(:condition)
+  }
+
+  rule(:if_) {
+    x = condition >> lfs >> stmt.repeat.as(:then_)
+    x >> line('.else') >> stmt.repeat.as(:else_) >> str('.end') | x >> str('.end')
+  }
+
+  rule(:stmt) { (if_ | inst) >> lfs }
+  rule(:program) { lfs? >> stmt.repeat }
+
+  root :program
+end
+
+def assemble instruction
+  #puts "+++ #{instruction}"
+  inst = Parser.new.inst.parse instruction
+  ret = Compiler.new.apply inst
+  $disassembly[ret] = Prettier.new.apply inst
+  ret
+end
+
+def condition_wrapper src, op, dst, off
+  off = off.to_s 16 # must be positive
+  ret = if dst.is_a? Hash
+    dst = dst[:reg].to_i
+    case condition[:op].to_s
+    when '<'
+      ["slt r#{src} r#{dst}", "bteqz #{off}"]
+    when '>='
+      ["slt r#{src} r#{dst}", "btnez #{off}"]
+    when '>'
+      ["slt r#{dst} r#{src}", "bteqz #{off}"]
+    when '<='
+      ["slt r#{dst} r#{src}", "btnez #{off}"]
+    when '=='
+      ["subu r1 r#{src} r#{dst}", "btnez #{off}"]
+    when '!='
+      ["subu r1 r#{src} r#{dst}", "bteqz #{off}"]
+    end
+  else
+    dst = hex 8, dst
+    case op
+    when '<'
+      ["sltui r#{src} #{dst.to_s 16}", "bteqz #{off}"]
+    when '>='
+      ["sltui r#{src} #{dst.to_s 16}", "btnez #{off}"]
+    when '>'
+      ["sltui r#{src} #{(dst+1).to_s 16}", "btnez #{off}"]
+    when '<='
+      ["sltui r#{src} #{(dst+1).to_s 16}", "bteqz #{off}"]
+    when '=='
+      raise 'not implemented'
+    when '!='
+      raise 'not implemented'
+    end
+  end
+  (ret << 'nop').map {|i| assemble i}
+end
+
+class Prettier < Parslet::Transform
+  rule(i: simple(:i)) { Integer i, 16 }
+  rule(inst: simple(:inst)) { inst }
+
+  rule(xi: simple(:op), rx: subtree(:rx), imm: simple(:imm)) {
+    x = rx[:reg].to_s.to_i
+    i = imm.to_s
+    "#{op}\tr#{x}\t#{i}"
+  }
+
+  rule(xy5: simple(:op), rx: subtree(:rx), ry: subtree(:ry)) {
+    x = rx[:reg].to_s.to_i
+    y = ry[:reg].to_s.to_i
+    "#{op}\tr#{x}\tr#{y}"
+  }
+
+  rule(xyi: simple(:op), rx: subtree(:rx), ry: subtree(:ry), imm: simple(:imm)) {
+    x = rx[:reg].to_s.to_i
+    y = ry[:reg].to_s.to_i
+    i = imm.to_s
+    "#{op}\tr#{x}\tr#{y}\t#{i}"
+  }
+
+  rule(xyz2: simple(:op), rx: subtree(:rx), ry: subtree(:ry), rz: subtree(:rz)) {
+    x = rx[:reg].to_s.to_i
+    y = ry[:reg].to_s.to_i
+    z = rz[:reg].to_s.to_i
+    "#{op}\tr#{x}\tr#{y}\tr#{z}"
+  }
+
+  rule(prefix3: simple(:op), imm: simple(:imm)) {
+    i = imm.to_s
+    "#{op}\tr#{i}"
+  }
+
+  rule(x8: simple(:op), rx: subtree(:rx)) {
+    x = rx[:reg].to_s.to_i
+    "#{op}\tr#{x}"
+  }
+
+  rule(single: simple(:op)) {
+    op
+  }
+
+  rule(int: simple(:int), imm: simple(:imm)) {
+    i = imm.to_s
+    "int\t#{i}"
+  }
+
+  rule(mtsp: simple(:op), rx: subtree(:rx)) {
+    x = rx[:reg].to_s.to_i
+    "mtsp\tr#{x}"
+  }
+
+  rule(b: simple(:b), jump: simple(:jump)) {
+    "#{b}\t#{jump}"
+  }
+
+  rule(b: simple(:b), reg: simple(:reg), jump: simple(:jump)) {
+    x = reg.to_i
+    "#{b}\t#{x}\t#{jump}"
+  }
+end
+
+def hex w, i
+  i = i.is_a?(Integer) ? i : Integer(i, 16)
+  if i >= 1 << w || i < -1 << w-1
+    raise "immediate too large"
+  end
+  i % (1 << w)
+end
+
+class Compiler < Parslet::Transform
+  rule(inst: simple(:inst)) { inst }
+
+  rule(xi: simple(:xi), rx: subtree(:rx), imm: simple(:imm)) {
+    x = rx[:reg].to_s.to_i
+    i = hex 8, imm
+    op = {
+      'addiu' => 0b01001,
+      'cmpi' => 0b01110,
+      'li' => 0b01101,
+      'lw_sp' => 0b10010,
+      'sltui' => 0b01011,
+      'sw_sp' => 0b11010,
+    }[xi.to_s]
+    op << 11 | x << 8 | i
+  }
+
+  rule(xy5: simple(:xy5), rx: subtree(:rx), ry: subtree(:ry)) {
+    x = rx[:reg].to_s.to_i
+    y = ry[:reg].to_s.to_i
+    op = {
+      'and' => [0b11101, 0b01100],
+      'cmp' => [0b11101, 0b01010],
+      'move' => [0b01111, 0b00000],
+      'neg' => [0b11101, 0b01011],
+      'not' => [0b11101, 0b01111],
+      'or' => [0b11101, 0b01011],
+      'sllv' => [0b11101, 0b00100],
+      'slt' => [0b11101, 0b00010],
+      'sltu' => [0b11101, 0b00011],
+      'srav' => [0b11101, 0b00111],
+      'srlv' => [0b11101, 0b00110],
+      'xor' => [0b11101, 0b01110],
+    }[xy5.to_s]
+    op[0] << 11 | x << 8 | y << 5 | op[1]
+  }
+
+  rule(xyi: simple(:op), rx: subtree(:rx), ry: subtree(:ry), imm: simple(:imm)) {
+    x = rx[:reg].to_s.to_i
+    y = ry[:reg].to_s.to_i
+    if $xyi2_ops.member? op.to_s
+      i = hex 3, imm
+      code = {
+        'sll' => [0b00110, 0b00],
+        'sra' => [0b00110, 0b11],
+        'srl' => [0b00110, 0b10],
+      }[op.to_s]
+      code[0] << 11 | x << 8 | y << 5 | i << 2 | code[1]
+    else
+      i = hex(op.to_s == 'addiu3' ? 4 : 5, imm)
+      code = {
+        'lw' => 0b10011,
+        'sw' => 0b11011,
+        'addiu3' => 0b01000,
+      }[op.to_s]
+      code << 11 | x << 8 | y << 5 | i
+    end
+  }
+
+  rule(xyz2: simple(:xyz2), rx: subtree(:rx), ry: subtree(:ry), rz: subtree(:rz)) {
+    x = rx[:reg].to_s.to_i
+    y = ry[:reg].to_s.to_i
+    z = rz[:reg].to_s.to_i
+    op = {
+      'addu' => [0b11100, 0b01],
+      'subu' => [0b11100, 0b11],
+    }[xyz2.to_s]
+    op[0] << 11 | x << 8 | y << 5 | z << 2 | op[1]
+  }
+
+  rule(prefix3: simple(:prefix3), imm: simple(:imm)) {
+    i = hex 8, imm
+    op = {
+      'addsp' => [0b01100, 0b011],
+    }[prefix3.to_s]
+    op[0] << 11 | op[1] << 8 | i
+  }
+
+  rule(x8: simple(:x8), rx: subtree(:rx)) {
+    x = rx[:reg].to_s.to_i
+    op = {
+      'jalr' => [0b11101, 0b11000000],
+      'jr' => [0b11101, 0b00000000],
+      'mfih' => [ 0b11110, 0b00000000],
+      'mfpc' => [0b11101, 0b01000000],
+      'move' => [0b01111, 0b00000],
+      'mtih' => [0b11110, 0b00000001],
+    }[x8.to_s]
+    op[0] << 11 | x << 8 | op[1]
+  }
+
+  rule(single: simple(:single)) {
+    {
+      'eret' => 0b1000000000000000,
+      'nop' => 0b0000100000000000,
+      'jrra' => 0b1110100000100000,
+    }[single.to_s]
+  }
+
+  rule(int: simple(:int), imm: simple(:imm)) {
+    i = hex 4, imm
+    0b11111 << 11 | i
+  }
+
+  rule(mtsp: simple(:op), rx: subtree(:rx)) {
+    x = rx[:reg].to_s.to_i
+    0b01100100 << 8 | x << 5
+  }
+
+  rule(b: simple(:b), jump: simple(:jump)) {
+    off = hex(b.to_s == 'b' ? 11 : 8, jump)
+    case b.to_s
+    when 'b'
+      0b00010 << 11 | off
+    when 'bteqz'
+      0b01100000 << 8 | off
+    when 'btnez'
+      0b01100001 << 8 | off
+    end
+  }
+
+  rule(b: simple(:b), reg: simple(:reg), jump: simple(:jump)) {
+    off = hex 11, jump
+    x = reg.to_i
+    case b
+    when 'beqz'
+      0b00100 << 11 | x << 8 | off
+    when 'bnez'
+      0b00101 << 11 | x << 8 | off
+    end
+  }
+
+  rule(condition: subtree(:condition), then_: subtree(:then_)) {
+    src = condition[:src][:reg].to_i
+    dst = condition[:dst]
+    off = then_.flatten.size * 2 + 2
+    condition_wrapper(src, condition[:op].to_s, dst, off) + then_
+  }
+
+  rule(condition: subtree(:condition), then_: subtree(:then_), else_: subtree(:else_)) {
+    src = condition[:src][:reg].to_i
+    dst = condition[:dst]
+    off = then_.flatten.size * 2 + 2
+    off2 = else_.flatten.size * 2 + 2
+    condition_wrapper(src, condition[:op].to_s, dst, off) + then_ + [assemble("b #{off2}"), assemble('nop')] + else_
+  }
+end
+
 class Assembler
-  def hex i, w
-    i.to_i(16) % (1 << w)
-  end
-
-  def xi op, rx, i
-    op << 11 | rx.to_i << 8 | hex(i, 8)
-  end
-
-  def xy5 op, funct, rx, ry
-    op << 11 | rx.to_i << 8 | ry.to_i << 5 | funct
-  end
-
-  def xyi op, rx, ry, i
-    op << 11 | rx.to_i << 8 | ry.to_i << 5 | hex(i, 5)
-  end
-
-  def xyz2 op, funct, rx, ry, rz
-    op << 11 | rx.to_i << 8 | ry.to_i << 5 | rz.to_i << 2 | funct
-  end
-
-  def prefix3 op, funct, i
-    op << 11 | funct << 8 | hex(i, 8)
-  end
-
-  def x8 op, suffix, rx
-    op << 11 | rx.to_i << 8 | suffix
-  end
-
-  def xyi2 op, suffix, rx, ry, i
-    op << 11 | rx.to_i << 8 | ry.to_i << 5 | hex(i, 3) << 2 | suffix
-  end
-
-  def b opname, line
-    if [:beqz, :bnez].include? opname
-      unless line =~ /^r(\w+) ([-\w]+)$/
-        STDERR.puts "Format error: #{line}"
-        abort
-      end
-      rx = $1.to_i
-      lab = $2
-    else
-      unless line =~ /^([-\w]+)$/
-        STDERR.puts "Format error: #{line}"
-        abort
-      end
-      lab = $1
-    end
-
-    if lab =~ /\A-?\d+\z/
-      off = lab.to_i 16
-    else
-      if @labels[lab]
-        off = @labels[lab] - (@pc + 2)
-      else
-        STDERR.puts "Label not found: #{line}"
-        abort
-      end
-    end
-
-    w = opname == 'b' ? 11 : 8
-    if off < -1 << w-1 or off >= 1 << w-1
-      STDERR.puts "Branch distance too large: #{line}"
-      abort
-    end
-
-    case opname
-    when :b
-      0b00010 << 11 | (off + (1 << w)) % (1 << w)
-    when :beqz
-      0b00100 << 11 | rx << 8 | (off + (1 << w)) % (1 << w)
-    when :bnez
-      0b00101 << 11 | rx << 8 | (off + (1 << w)) % (1 << w)
-    when :bteqz
-      0b01100 << 11 | 0b000 << 8 | (off + (1 << w)) % (1 << w)
-    when :btnez
-      0b01100 << 11 | 0b001 << 8 | (off + (1 << w)) % (1 << w)
-    end
-  end
-
-  def initialize options
+  def initialize options={}
     @options = options
-    @@cat ||= {
-      xi: /^r(\d+) ([-\w]+)$/,
-      xy5: /^r(\d+) r(\d+)$/,
-      xyi: /^r(\d+) r(\d+) ([-\w]+)$/,
-      xyi2: /^r(\d+) r(\d+) ([-\w]+)$/,
-      xyz2: /^r(\d+) r(\d+) r(\d+)$/,
-      prefix3: /^(\w+)$/,
-      x8: /^r(\d+)$/,
-    }
-    @@inst ||= {
-      addiu: [:xi, 0b01001],
-      addiu3: [/r(\d+) r(\d+) ([-\w]+)/, ->rx,ry,i{ 0b01000<<11 | rx.to_i<<8 | ry.to_i<<5 | hex(i, 4) }],
-      addsp: [:prefix3, 0b01100, 0b011],
-      addu: [:xyz2, 0b11100, 0b01],
-      and: [:xy5, 0b11101, 0b01100],
-      b: [:b],
-      beqz: [:b],
-      bnez: [:b],
-      bteqz: [:b],
-      btnez: [:b],
-      cmp: [:xy5, 0b11101, 0b01010],
-      cmpi: [:xi, 0b01110],
-      eret: [/^$/, ->{ 0b1000000000000000 }],
-      int: [/^(\w+)$/, ->i{ 0b11111 << 11 | i.to_i(16) }],
-      jalr: [:x8, 0b11101, 0b11000000],
-      jr: [:x8, 0b11101, 0b00000000],
-      jrra: [/^$/, ->{ 0b1110100000100000 }],
-      li: [:xi, 0b01101],
-      lw: [:xyi, 0b10011],
-      lw_sp: [:xi, 0b10010],
-      mfih: [:x8, 0b11110, 0b00000000],
-      mfpc: [:x8, 0b11101, 0b01000000],
-      move: [:xy5, 0b01111, 0b00000],
-      mtih: [:x8, 0b11110, 0b00000001],
-      mtsp: [/^r(\w+)$/, ->rx{ 0b01100100 << 8 | rx.to_i << 5 }],
-      neg: [:xy5, 0b11101, 0b01011],
-      not: [:xy5, 0b11101, 0b01111],
-      nop: [/^$/, ->{ 0b0000100000000000 }],
-      or: [:xy5, 0b11101, 0b01101],
-      sll: [:xyi2, 0b00110, 0b00],
-      sllv: [:xy5, 0b11101, 0b00100],
-      slt: [:xy5, 0b11101, 0b00010],
-      sltu: [:xy5, 0b11101, 0b00011],
-      sltui: [:xi, 0b01011],
-      sra: [:xyi2, 0b00110, 0b11],
-      srav: [:xy5, 0b11101, 0b00111],
-      srl: [:xyi2, 0b00110, 0b10],
-      srlv: [:xy5, 0b11101, 0b00110],
-      subu: [:xyz2, 0b11100, 0b11],
-      sw: [:xyi, 0b11011],
-      sw_sp: [:xi, 0b11010],
-      xor: [:xy5, 0b11101, 0b01110],
-    }
   end
 
-  def error msg
-    STDERR.puts "#{@ops[@pc>>1][0]}: #{msg}: #{@ops[@pc>>1][1].join(' ')}"
-    abort
+  def incr steps
+    @addr += steps * 2
+  end
+
+  def address stmt
+    case stmt
+    when Array
+      stmt.each(&method(:address))
+    when Hash
+      if stmt[:label]
+        @labels[stmt[:label].to_s] = @addr
+        stmt.delete :label
+      end
+      if stmt[:condition]
+        incr 3
+        address stmt[:then_]
+        if stmt[:else_]
+          incr 2
+          address stmt[:else_]
+        end
+      else
+        incr 1
+      end
+    end
+  end
+
+  def relabel stmt
+    case stmt
+    when Array
+      stmt.each(&method(:relabel))
+    when Hash
+      if stmt[:condition]
+        incr 3
+        relabel stmt[:then_]
+        if stmt[:else_]
+          incr 2
+          relabel stmt[:else_]
+        end
+      else
+        jump = stmt[:inst][:jump]
+        if jump.is_a?(Hash)
+          stmt[:inst][:jump] = @labels[jump[:label].to_s] - (@addr + 2)
+        elsif jump
+          stmt[:inst][:jump] = Integer(jump, 16)
+        end
+        @orig[@addr] = Prettier.new.apply stmt
+        incr 1
+      end
+    end
+  end
+
+  def parse content
+    # parse
+    stmts = Parser.new.parse content
+    #puts "---parse"
+    #p stmts
+
+    # address
+    @addr = 0
+    @labels = {}
+    address stmts
+
+    # relabel
+    @addr = 0
+    @orig = {}
+    relabel stmts
+    #puts '---relabel'
+    #p stmts
+    #p @orig
+
+    # transform
+    $disassembly = {}
+    precode = Compiler.new.apply(stmts).flatten
+
+    # transform
+    #puts "---precode"
+    precode
   end
 
   def [] filename
     h = filename == '-' ? STDIN : File.open(filename)
-    lines = h.readlines
-
-    @pc = 0
-    @ops = []
-    @labels = {}
-    lineno = 1
-    lines.each do |line|
-      if line !~ /^\s*#/
-        if line.sub!(/^(\w+):/, '')
-          @labels[$1] = @pc
-        end
-        unless line.strip!.empty?
-          @ops << [lineno, line.split]
-          @pc += 2
-        end
-      end
-      lineno += 1
-    end
-
-    @pc = 0
-    @ops.each do |_,args|
-      line = args.join ' '
-      opname = args.shift.downcase.to_sym
-      type, *operands = @@inst[opname]
-      error 'Unrecognized instruction' unless type
-      opcode = case type
-               when :b
-                 send type, opname, args.join(' ')
-               when Symbol
-                 error 'Format error' unless @@cat[type] =~ args.join(' ')
-                 operands += $~.captures
-                 send type, *operands
-               when Regexp
-                 error 'Format error' unless type =~ args.join(' ')
-                 operands[0][* $~.captures]
-               end
+    addr = 0
+    parse(h.read).each do |i|
       if @options[:hex] || @options[:binary]
-        STDOUT.write (@options[:hex] ? '%04x' : '%016b') % opcode
-        STDOUT.write "\t#{line}" if @options[:assembly]
+        STDOUT.write (@options[:hex] ? '%04x' : '%016b') % i
+        STDOUT.write "\t#{@orig[addr] || $disassembly[i]}" if @options[:assembly]
         puts
       else
-        STDOUT.write [opcode].pack('S<')
+        STDOUT.write [i].pack('S<')
       end
-      @pc += 2
+      addr += 2
     end
-    h.close
   end
 end
 
 options = {}
 OptionParser.new do |opts|
-  opts.banner = 'Usage: assembler [options] [assembly-sources]'
+ opts.banner = 'Usage: assembler [options] [assembly-sources]'
 
-  opts.on '-x', '--hex', 'Print plain hexdump' do |v|
-    options[:hex] = true
-  end
+ opts.on '-x', '--hex', 'Print plain hexdump' do |v|
+   options[:hex] = true
+ end
 
-  opts.on '-b', '--binary', 'Print plain binary dump' do |v|
-    options[:binary] = true
-  end
+ opts.on '-d', '--debug', 'Debug' do |v|
+   options[:debug] = true
+ end
 
-  opts.on '-a', '--assembly', 'Print assembly' do |v|
-    options[:assembly] = true
-  end
+ opts.on '-b', '--binary', 'Print plain binary dump' do |v|
+   options[:binary] = true
+ end
 
-  opts.on_tail("-h", "--help", "Show this message") do
-    puts opts
-    exit
-  end
+ opts.on '-a', '--assembly', 'Print assembly' do |v|
+   options[:assembly] = true
+ end
+
+ opts.on_tail("-h", "--help", "Show this message") do
+   puts opts
+   exit
+ end
 end.parse!
 ARGV << '-' if ARGV.empty?
 assembler = Assembler.new options
