@@ -20,7 +20,7 @@ wire [15:0] ExCalResult, MeCalResult;
 wire hardwareInterruptSignal;
 wire [3:0] hardwareInterruptIndex;
 wire [15:0] keyboardData;
-//wire [15:0] interruptPC;
+wire [15:0] interruptPC;
 
 wire [3:0] registerS, registerM, IdRegisterT, MeRegisterT;
 
@@ -40,7 +40,7 @@ always @ (negedge clk25M or negedge rst)
   else
     clk12M = ~ clk12M;
 
-//assign leddebug = {memAdataRead};
+//assign leddebug = {interruptPC};
 
 cpu naive (
   clkHand, rst,
@@ -52,7 +52,7 @@ cpu naive (
   IfPC, IfIR,
   registerS, registerM, IdRegisterT, MeRegisterT,
   MeCalResult,
-  leddebug
+  interruptPC, leddebug
 );
 
 GraphicCard graphic (

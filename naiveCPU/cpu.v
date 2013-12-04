@@ -12,7 +12,7 @@ module cpu (
   output [15:0] nextPC, IfIR,
   output [3:0] registerS, registerM, IdRegisterT, MeRegisterT,
   output [15:0] MeCalResult,
-  output [15:0] interruptPC
+  output [15:0] interruptPC, interruptIR
 );
 
 wire [15:0] IfPC, IdIR, IdPC;
@@ -33,7 +33,9 @@ wire [15:0] sourceValueS, sourceValueM;
 wire [3:0] /*IdRegisterT,*/ ExRegisterT;//, MeRegisterT;
 //wire [15:0] MeCalResult;
 wire [15:0] ExAaddr/*, MeAaddr, MeMemResult*/;
-wire [15:0] returnIR, readIfIR;
+wire [15:0] /*interruptIR,*/ readIfIR;
+
+//assign returnIROut = returnIR;
 
 //assign IfPC = 16'hFFFF;
 //assign IfIR = 16'hEEEE;
@@ -67,12 +69,12 @@ interrupt interruptM (
   eret,
   interruptOccurs,
   interruptPC,
-  returnIR
+  interruptIR
 );
 
 selector InterruptIRSelector (
   eret & interruptOccurs,
-  returnIR,
+  interruptIR,
   readIfIR,
   IfIR
 );

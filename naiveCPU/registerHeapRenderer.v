@@ -7,12 +7,12 @@ module RegisterHeapRenderer (
 
 localparam deltaY = 60;
 
-registerRenderer register0 (
-  x, y,
-  cx, cy - deltaY * 3 - deltaY / 2,
-  0, registers[175:160],
-  hit
-);
+//registerRenderer register0 (
+//  x, y,
+//  cx, cy - deltaY * 3 - deltaY / 2,
+//  0, registers[175:160],
+//  hit
+//);
 
 registerRenderer register1 (
   x, y,
