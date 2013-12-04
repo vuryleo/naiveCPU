@@ -40,14 +40,14 @@ class Parser < Parslet::Parser
   rule(:mtsp) { str('mtsp').as(:mtsp) >> s >> reg.as(:rx) }
 
   rule(:branch) {
-    jump = (hex | ident.as(:label)).as(:jump)
+    jump = (hex | str('@') >> ident.as(:label)).as(:jump)
     strs(['beqz', 'bnez']).as(:b) >> s >> reg >> sc >> jump |
       strs(['bteqz', 'btnez', 'b']).as(:b) >> s >> jump
   }
 
   rule(:single) { strs(['eret', 'jrra', 'nop']).as(:single) }
 
-  rule(:ident) { match('\w').repeat }
+  rule(:ident) { match('\w').repeat(1) }
 
   rule(:inst) {
     x = (xi | xy5 | xyi | xyz2 | x8 | prefix3 | single | int | mtsp | branch).as(:inst)
@@ -180,7 +180,7 @@ class Prettier < Parslet::Transform
 
   rule(b: simple(:b), reg: simple(:reg), jump: simple(:jump)) {
     x = reg.to_i
-    "#{b}\t#{x}\t#{jump}"
+    "#{b}\tr#{x}\t#{jump}"
   }
 end
 
@@ -386,7 +386,11 @@ class Assembler
       else
         jump = stmt[:inst][:jump]
         if jump.is_a?(Hash)
-          stmt[:inst][:jump] = @labels[jump[:label].to_s] - (@addr + 2)
+          unless pc = @labels[jump[:label].to_s] 
+            STDERR.puts "label not found #{jump[:label]}"
+            abort
+          end
+          stmt[:inst][:jump] = pc - (@addr + 2)
         elsif jump
           stmt[:inst][:jump] = Integer(jump, 16)
         end
