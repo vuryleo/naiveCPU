@@ -67,10 +67,9 @@ nop
 print:
 sw_sp r4 0
 li r4 f0
-sll r4 r4 0
-sll r2 r2 7
-sll r3 r3 1
+sll r4 r4 2
 addu r2 r4 r4
+sll r4 r4 4
 addu r3 r4 r4
 sw r4 r1 0
 lw_sp r4 0
@@ -83,7 +82,6 @@ sll r4 r4 0
 li r5 0
 li r6 0
 readchar:int 2
-nop
 bnez r2 readchar
 nop
 move r3 r5
