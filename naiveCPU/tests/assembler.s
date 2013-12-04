@@ -1,9 +1,9 @@
-bteqz hello
-btnez hello
-beqz r7 hello
-bnez r7 hello
+bteqz @hello
+btnez @hello
+beqz r7 @hello
+bnez r7 @hello
 hello: addiu r1 3f
-b hello
+b @hello
 addiu3 r1 r2 e
 addsp 32
 addu r1 r2 r3
