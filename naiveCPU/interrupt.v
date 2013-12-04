@@ -16,12 +16,12 @@ always @ (negedge clk or negedge rst)
   if (!rst)
   begin
     currentPC = 0;
-	 clear = 1;
+    clear = 1;
   end
   else
   begin
     currentPC = currentPCIn;
-	 clear = interruptOccurs;
+    clear = interruptOccurs;
   end
 
 always @ (clk or rst or eret or interruptSignal or interruptIndex)
@@ -51,8 +51,8 @@ begin
           returnPC = currentPC;
           interruptEnable = 1;
         end
-		  else if (!clear)
-		    interruptOccurs = 1;
+        else if (!clear)
+          interruptOccurs = 1;
       end
     end
 end

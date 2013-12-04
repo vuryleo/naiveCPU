@@ -40,7 +40,7 @@ always @ (negedge clk25M or negedge rst)
   else
     clk12M = ~ clk12M;
 
-assign leddebug = {memAdataRead};
+//assign leddebug = {memAdataRead};
 
 cpu naive (
   clkHand, rst,
@@ -51,7 +51,8 @@ cpu naive (
   registerValue,
   IfPC, IfIR,
   registerS, registerM, IdRegisterT, MeRegisterT,
-  MeCalResult
+  MeCalResult,
+  leddebug
 );
 
 GraphicCard graphic (

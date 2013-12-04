@@ -30,16 +30,16 @@ always @ (posedge clk or negedge rst)
   end
   else
   begin
-    if (delay == 0)
+//    if (delay == 0)
     begin
       interruptSignal = keyDown;
       interruptIndex = 1;
     end
-    else
-    begin
-      interruptSignal = 1;
-      interruptIndex = 0;
-    end
+//    else
+//    begin
+//      interruptSignal = 1;
+//      interruptIndex = 0;
+//    end
   end
 
 endmodule
