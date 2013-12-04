@@ -9,8 +9,8 @@ class Parser < Parslet::Parser
   rule(:s) { match[' \t'].repeat(1) }
   rule(:s?) { match[' \t'].repeat }
   rule(:lf) { str("\n") }
-  rule(:lfs) { s? >> lf >> (s|lf).repeat }
-  rule(:lfs?) { (s|lf).repeat }
+  rule(:lfs) { s? >> lf >> match['\s'].repeat }
+  rule(:lfs?) { match['\s'].repeat }
   rule(:sc) { s | (s? >> str(',') >> s?) }
   rule(:hex) { match['-0-9a-fA-F'].repeat(1) }
   rule(:imm) { hex.as(:imm) }
@@ -60,12 +60,13 @@ class Parser < Parslet::Parser
 
   rule(:condition) {
     op = strs ['<=', '>=', '<', '>', '==', '!=']
-    str('.if') >> s >> (reg.as(:src) >> s? >> op.as(:op) >> s? >> (reg | hex).as(:dst)).as(:condition)
+    (reg.as(:src) >> s? >> op.as(:op) >> s? >> (reg | hex).as(:dst)).as(:condition)
   }
 
   rule(:if_) {
-    x = condition >> lfs >> stmt.repeat.as(:then_)
-    x >> line('.else') >> stmt.repeat.as(:else_) >> str('.end') | x >> str('.end')
+    x = str('.if') >> s >> condition >> lfs >> stmt.repeat.as(:then_)
+    elif = (str('.elif') >> s >> condition >> lfs >> stmt.repeat.as(:elif)).repeat.as(:elif)
+    x >> elif >> (line('.else') >> stmt.repeat.as(:elif)).maybe.as(:else_) >> str('.end')
   }
 
   rule(:stmt) { (if_ | inst) >> lfs }
@@ -88,33 +89,33 @@ def condition_wrapper src, op, dst, off
     dst = dst[:reg].to_i
     case condition[:op].to_s
     when '<'
-      ["slt r#{src} r#{dst}", "bteqz #{off}"]
+      ["slt r#{src} r#{dst}", 'nop' "bteqz #{off}"]
     when '>='
-      ["slt r#{src} r#{dst}", "btnez #{off}"]
+      ["slt r#{src} r#{dst}", 'nop', "btnez #{off}"]
     when '>'
-      ["slt r#{dst} r#{src}", "bteqz #{off}"]
+      ["slt r#{dst} r#{src}", 'nop', "bteqz #{off}"]
     when '<='
-      ["slt r#{dst} r#{src}", "btnez #{off}"]
+      ["slt r#{dst} r#{src}", 'nop', "btnez #{off}"]
     when '=='
-      ["subu r1 r#{src} r#{dst}", "btnez #{off}"]
+      ["subu r1 r#{src} r#{dst}", 'nop', "btnez #{off}"]
     when '!='
-      ["subu r1 r#{src} r#{dst}", "bteqz #{off}"]
+      ["subu r1 r#{src} r#{dst}", 'nop', "bteqz #{off}"]
     end
   else
     dst = hex 8, dst
     case op
     when '<'
-      ["sltui r#{src} #{dst.to_s 16}", "bteqz #{off}"]
+      ["sltui r#{src} #{dst.to_s 16}", 'nop', "bteqz #{off}"]
     when '>='
-      ["sltui r#{src} #{dst.to_s 16}", "btnez #{off}"]
+      ["sltui r#{src} #{dst.to_s 16}", 'nop', "btnez #{off}"]
     when '>'
-      ["sltui r#{src} #{(dst+1).to_s 16}", "btnez #{off}"]
+      ["sltui r#{src} #{(dst+1).to_s 16}", 'nop', "btnez #{off}"]
     when '<='
-      ["sltui r#{src} #{(dst+1).to_s 16}", "bteqz #{off}"]
+      ["sltui r#{src} #{(dst+1).to_s 16}", 'nop', "bteqz #{off}"]
     when '=='
-      raise 'not implemented'
+      ["move r1 r#{src}", "addiu r1 #{((-dst)%256).to_s 16}", "bnez r1 #{off}"]
     when '!='
-      raise 'not implemented'
+      ["move r1 r#{src}", "addiu r1 #{((-dst)%256).to_s 16}", "beqz r1 #{off}"]
     end
   end
   (ret << 'nop').map {|i| assemble i}
@@ -175,12 +176,12 @@ class Prettier < Parslet::Transform
   }
 
   rule(b: simple(:b), jump: simple(:jump)) {
-    "#{b}\t#{jump}"
+    "#{b}\t#{jump.to_s}"
   }
 
   rule(b: simple(:b), reg: simple(:reg), jump: simple(:jump)) {
     x = reg.to_i
-    "#{b}\tr#{x}\t#{jump}"
+    "#{b}\tr#{x}\t#{jump.to_s}"
   }
 end
 
@@ -324,19 +325,27 @@ class Compiler < Parslet::Transform
     end
   }
 
-  rule(condition: subtree(:condition), then_: subtree(:then_)) {
+  rule(condition: subtree(:condition), then_: subtree(:then_), elif: subtree(:elif), else_: subtree(:else_)) {
     src = condition[:src][:reg].to_i
     dst = condition[:dst]
-    off = then_.flatten.size * 2 + 2
-    condition_wrapper(src, condition[:op].to_s, dst, off) + then_
-  }
 
-  rule(condition: subtree(:condition), then_: subtree(:then_), else_: subtree(:else_)) {
-    src = condition[:src][:reg].to_i
-    dst = condition[:dst]
-    off = then_.flatten.size * 2 + 2
-    off2 = else_.flatten.size * 2 + 2
-    condition_wrapper(src, condition[:op].to_s, dst, off) + then_ + [assemble("b #{off2}"), assemble('nop')] + else_
+    el = elif
+    el += [else_] if else_
+    off = then_.flatten.size * 2 + (el.empty? ? 2 : 6)
+    ret = condition_wrapper(src, condition[:op].to_s, dst, off) + then_
+
+    bottom_off = el.map{|x| x[:elif].size * 2 + (x[:condition] ? 12 : 0) }.inject(2, :+) - (else_ ? 0 : 4)
+    until el.empty?
+      ret += [assemble("b #{bottom_off.to_s 16}"), assemble('nop')]
+      e = el.shift
+      if e[:condition]
+        ret += condition_wrapper(e[:condition][:src][:reg].to_i, e[:condition][:op].to_s, e[:condition][:dst], e[:elif].flatten.size * 2 + (el.empty? ? 2 : 6)) + e[:elif]
+      else
+        ret += e[:elif]
+      end
+      bottom_off -= e[:elif].size * 2 + (e[:condition] ? 12 : 0)
+    end
+    ret
   }
 end
 
@@ -359,11 +368,15 @@ class Assembler
         stmt.delete :label
       end
       if stmt[:condition]
-        incr 3
+        incr 4
         address stmt[:then_]
+        stmt[:elif].each do |elif|
+          incr 6
+          address elif[:elif]
+        end
         if stmt[:else_]
           incr 2
-          address stmt[:else_]
+          address stmt[:else_][:elif]
         end
       else
         incr 1
@@ -377,11 +390,15 @@ class Assembler
       stmt.each(&method(:relabel))
     when Hash
       if stmt[:condition]
-        incr 3
+        incr 4
         relabel stmt[:then_]
+        stmt[:elif].each do |elif|
+          incr 6
+          relabel elif[:elif]
+        end
         if stmt[:else_]
           incr 2
-          relabel stmt[:else_]
+          relabel stmt[:else_][:elif]
         end
       else
         jump = stmt[:inst][:jump]
@@ -401,6 +418,9 @@ class Assembler
   end
 
   def parse content
+    # remove comments
+    content.gsub! /#.*$/, ''
+
     # parse
     stmts = Parser.new.parse content
     #puts "---parse"
@@ -415,16 +435,12 @@ class Assembler
     @addr = 0
     @orig = {}
     relabel stmts
-    #puts '---relabel'
-    #p stmts
-    #p @orig
 
     # transform
     $disassembly = {}
     precode = Compiler.new.apply(stmts).flatten
 
     # transform
-    #puts "---precode"
     precode
   end
 
