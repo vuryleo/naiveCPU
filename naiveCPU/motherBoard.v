@@ -43,7 +43,7 @@ always @ (negedge clk25M or negedge rst)
 assign leddebug = {memAdataRead};
 
 cpu naive (
-  clk12M, rst,
+  clkHand, rst,
   memAaddr, memBaddr,
   ExCalResult, MeMemResult, memRW,
   memAdataRead, memBdataRead,
@@ -85,7 +85,7 @@ memoryMapping mapingB (
 );
 
 memoryController memory(
-  clk12M,
+  clkHand,
   physicalMemAaddr, MeMemResult,
   memRW,
   ramAdataRead,
@@ -97,7 +97,7 @@ memoryController memory(
 );
 
 romController rom (
-  clk12M,
+  clkHand,
   physicalRomAaddr,
   romAdataRead,
   physicalRomBaddr,
@@ -105,7 +105,7 @@ romController rom (
 );
 
 keyboard fakeKeyboard (
-  clk12M, rst,
+  clkHand, rst,
   keyDown, inputValue,
   hardwareInterruptSignal, hardwareInterruptIndex,
   keyboardData
