@@ -33,6 +33,7 @@ wire [15:0] sourceValueS, sourceValueM;
 wire [3:0] /*IdRegisterT,*/ ExRegisterT;//, MeRegisterT;
 //wire [15:0] MeCalResult;
 wire [15:0] ExAaddr/*, MeAaddr, MeMemResult*/;
+wire [15:0] returnIR, readIfIR;
 
 //assign IfPC = 16'hFFFF;
 //assign IfIR = 16'hEEEE;
@@ -48,7 +49,7 @@ wire [15:0] ExAaddr/*, MeAaddr, MeMemResult*/;
 PCadder pcAdder (
   clk, rst,
   nextPC,
-  IfIR,
+  readIfIR,
   rs,
   t,
   jumpControl,
@@ -60,12 +61,20 @@ PCadder pcAdder (
 
 interrupt interruptM (
   clk, rst,
-  normalNextPC,
+  normalNextPC, readIfIR,
   interruptSignal,
   interruptIndex,
   eret,
   interruptOccurs,
-  interruptPC
+  interruptPC,
+  returnIR
+);
+
+selector InterruptIRSelector (
+  eret & interruptOccurs,
+  returnIR,
+  readIfIR,
+  IfIR
 );
 
 instructionReader reader (

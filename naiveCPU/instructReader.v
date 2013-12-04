@@ -11,7 +11,7 @@ always @ (negedge clk)
 
 always @ (negedge rst or posedge clk)
   if (!rst)
-    currentIR = 0;
+    currentIR = 16'h0800;// nop
   else
     currentIR = memRead;
 
