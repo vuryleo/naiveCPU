@@ -49,7 +49,7 @@ wire [15:0] returnIR, readIfIR;
 PCadder pcAdder (
   clk, rst,
   nextPC,
-  readIfIR,
+  IfIR,
   rs,
   t,
   jumpControl,
@@ -82,7 +82,7 @@ instructionReader reader (
   nextPC,
   BmemRead,
   Baddr,
-  IfIR
+  readIfIR
 );
 
 interruptArbitration arbitration (

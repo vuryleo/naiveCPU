@@ -29,7 +29,7 @@ wire[15:0] imm16s = {instruction[7] ? 8'hff : 8'h00, instruction[7:0]};
 always @ (negedge clk or negedge rst)
   if (!rst)
   begin
-    instruction = 16'b0000100000000000;
+    instruction = 16'h0800;
 	 currentPC = 16'hfffe;
   end
   else
