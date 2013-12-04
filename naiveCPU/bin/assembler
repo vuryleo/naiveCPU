@@ -51,7 +51,7 @@ class Parser < Parslet::Parser
 
   rule(:inst) {
     x = (xi | xy5 | xyi | xyz2 | x8 | prefix3 | single | int | mtsp | branch).as(:inst)
-    ident.as(:label) >> s? >> str(':') >> s? >> x | x
+    ident.as(:label) >> s? >> str(':') >> lfs? >> x | x
   }
 
   def line x
@@ -60,7 +60,7 @@ class Parser < Parslet::Parser
 
   rule(:condition) {
     op = strs ['<=', '>=', '<', '>', '==', '!=']
-    (reg.as(:src) >> s? >> op.as(:op) >> s? >> (reg | hex).as(:dst)).as(:condition)
+    (reg.as(:src) >> s? >> op.as(:op) >> s? >> (reg | hex | str("'") >> any.as(:char) >> str("'")).as(:dst)).as(:condition)
   }
 
   rule(:if_) {
@@ -195,6 +195,7 @@ end
 
 class Compiler < Parslet::Transform
   rule(inst: simple(:inst)) { inst }
+  rule(char: simple(:char)) { char.to_s.ord }
 
   rule(xi: simple(:xi), rx: subtree(:rx), imm: simple(:imm)) {
     x = rx[:reg].to_s.to_i
