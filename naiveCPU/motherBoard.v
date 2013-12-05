@@ -21,7 +21,7 @@ wire [15:0] ExCalResult, MeCalResult;
 wire hardwareInterruptSignal;
 wire [3:0] hardwareInterruptIndex;
 wire [15:0] keyboardData;
-wire [15:0] interruptPC;
+wire [15:0] interruptPC, interruptIR;
 wire [7:0] renderAscii;
 wire [13:0] renderIndex;
 
@@ -43,7 +43,7 @@ always @ (negedge clk25M or negedge rst)
   else
     clk12M = ~ clk12M;
 
-//assign leddebug = {interruptPC};
+assign leddebug = {memRW};
 
 cpu naive (
   clkHand, rst,
@@ -55,7 +55,7 @@ cpu naive (
   IfPC, IfIR,
   registerS, registerM, IdRegisterT, MeRegisterT,
   MeCalResult,
-  interruptPC, leddebug
+  interruptPC, interruptIR
 );
 
 GraphicCard graphic (
@@ -112,10 +112,13 @@ romController rom (
   romBdataRead
 );
 
-GraphicMemory graphicMem (
-  renderIndex,
+graphicRam graphicMem (
+  clkHand,
+  memRW == 2'b01,
   actualGraphicMemory,
   MeMemResult[7:0],
+  clkHand,
+  renderIndex,
   renderAscii
 );
 

@@ -28,12 +28,12 @@ registerRenderer register2 (
   hit
 );
 
-registerRenderer register3 (
-  x, y,
-  cx, cy - deltaY / 2,
-  3, registers[127:112],
-  hit
-);
+//registerRenderer register3 (
+//  x, y,
+//  cx, cy - deltaY / 2,
+//  3, registers[127:112],
+//  hit
+//);
 
 registerRenderer register4 (
   x, y,

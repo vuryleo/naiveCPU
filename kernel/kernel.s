@@ -8,9 +8,6 @@ b print
 nop
 
 init:
-li r1 02
-sll r1 r1 0
-mtsp r1
 li r1 04
 sll r1 r1 0
 addiu3 r1 r2 4
@@ -68,7 +65,6 @@ print:
 sw_sp r4 0
 li r4 80
 sll r4 r4 0
-addu r2 r4 r4
 sw r4 r1 0
 lw_sp r4 0
 jrra
@@ -85,23 +81,10 @@ jalr r2
 nop
 bnez r2 readchar
 nop
-move r3 r5
-sll r3 r3 6
-addu r6 r3 r3
-sll r3 r3 1
-addu r4 r3 r3
-sw r3 r1 0
-move r2 r5
-move r3 r6
-li r4 c
-jalr r4
+sw r4 r1 0
+li r3 c
+jalr r3
 nop
-cmpi r6 3f
-btnez skipswitchline
-addiu3 r6 r6 1
-li r6 0
-addiu3 r5 r5 1
-skipswitchline:
 b readchar
 nop
 
