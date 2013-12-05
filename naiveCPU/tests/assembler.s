@@ -1,16 +1,16 @@
-bteqz hello
-btnez hello
-beqz r7 hello
-bnez r7 hello
+bteqz @hello
+btnez @hello
+beqz r7 @hello
+bnez r7 @hello
 hello: addiu r1 3f
-b hello
-addiu3 r1 r2 14
+b @hello
+addiu3 r1 r2 e
 addsp 32
 addu r1 r2 r3
 and r1 r2
 cmp r3 r4
 cmpi r3 34
-int 10
+int f
 jalr r2
 jr r5
 jrra
