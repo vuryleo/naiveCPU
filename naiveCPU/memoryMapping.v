@@ -17,6 +17,10 @@ localparam RAM = 2'b00,
 reg [1:0] index;
 
 always @ (virtualAddr)
+begin
+  actualGraphicAddr = 13'b1111111111111;
+  actualRamAddr = 16'hffff;
+  actualRomAddr = 16'hffff;
   if (!virtualAddr[15]) // physical mem
   begin
     actualRamAddr = virtualAddr >> 1;
@@ -27,15 +31,16 @@ always @ (virtualAddr)
     actualRomAddr = {8'h00, virtualAddr[7:0]};
     index = ROM;
   end
-  else if (virtualAddr[15:8] >= 8'hf0 && virtualAddr[15:8] < 8'hFA) // graphic
+  else if (virtualAddr[15:8] >= 8'h80 && virtualAddr[15:8] < 8'h8A) // graphic
   begin
-    actualGraphicAddr = (virtualAddr - 16'hf000)[13:0];
+    actualGraphicAddr = virtualAddr[13:0];
     index = GRAPHIC;
   end
   else if (virtualAddr == 16'hFE00) // keyboard
   begin
     index = KEYBOARD;
   end
+end
 
 always @ (*)
   case (index)

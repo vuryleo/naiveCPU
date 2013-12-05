@@ -11,6 +11,7 @@ module motherBoard (
 );
 
 wire [175:0] registerValue;
+wire [13:0] actualGraphicMemory;
 wire [15:0] memAaddr, memBaddr, memAdataRead, memBdataRead, MeMemResult;
 wire [1:0] memRW;
 wire [15:0] physicalMemAaddr, physicalMemBaddr;
@@ -21,6 +22,8 @@ wire hardwareInterruptSignal;
 wire [3:0] hardwareInterruptIndex;
 wire [15:0] keyboardData;
 wire [15:0] interruptPC;
+wire [7:0] renderAscii;
+wire [13:0] renderIndex;
 
 wire [3:0] registerS, registerM, IdRegisterT, MeRegisterT;
 
@@ -62,13 +65,16 @@ GraphicCard graphic (
   registerS, registerM, IdRegisterT, MeRegisterT,
   ExCalResult, MeCalResult,
   vgaHs, vgaVs,
-  vgaR, vgaG, vgaB
+  vgaR, vgaG, vgaB,
+  renderAscii,
+  renderIndex
 );
 
 memoryMapping mapingA (
   memAaddr,
   physicalMemAaddr,
   physicalRomAaddr,
+  actualGraphicMemory,
   ramAdataRead,
   romAdataRead,
   keyboardData,
@@ -79,6 +85,7 @@ memoryMapping mapingB (
   memBaddr,
   physicalMemBaddr,
   physicalRomBaddr,
+  ,
   ramBdataRead,
   romBdataRead,
   keyboardData,
@@ -105,6 +112,13 @@ romController rom (
   romBdataRead
 );
 
+//GraphicMemory graphicMem (
+//  renderIndex,
+//  actualGraphicMemory,
+//  MeMemResult[7:0],
+//  renderAscii
+//);
+
 keyboard fakeKeyboard (
   clkHand, rst,
   keyDown, inputValue,
@@ -113,4 +127,3 @@ keyboard fakeKeyboard (
 );
 
 endmodule
-

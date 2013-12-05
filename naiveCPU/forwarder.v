@@ -63,3 +63,25 @@ always @ (posedge clk or negedge rst)
     outWord = temp;
 
 endmodule
+
+module forwarder1bit (
+  input clk, rst,
+  input inWord,
+  output reg outWord
+);
+
+reg temp;
+
+always @ (negedge clk or negedge rst)
+  if (!rst)
+    temp = 1;
+  else
+    temp = inWord;
+
+always @ (posedge clk or negedge rst)
+  if (!rst)
+    outWord = 1;
+  else
+    outWord = temp;
+
+endmodule

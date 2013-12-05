@@ -4,7 +4,10 @@ module Renderer (
   input [15:0] IfPC, IfIR,
   input [3:0] registerS, registerM, IdRegisterT, MeRegisterT,
   input [15:0] ExCalResult, MeCalResult,
-  output reg [2:0] r, g, b
+  output reg [2:0] r, g, b,
+  // memory
+  input [7:0] ascii,
+  output [13:0] readIndex
 );
 
 wor hit;
@@ -78,5 +81,12 @@ DigitRenderer renderRegisterMeT (
   MeRegisterT,
   hit
 );
+
+//MemRenderer memRenderer (
+//  x, y,
+//  ascii,
+//  readIndex,
+//  hit
+//);
 
 endmodule

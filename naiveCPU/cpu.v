@@ -18,8 +18,8 @@ module cpu (
 wire [15:0] IfPC, IdIR, IdPC;
 wire interruptSignal, interruptOccurs, eret;
 wire [3:0] interruptIndex;
-wire softwareInterruptSignal;
-wire [3:0] softwareInterruptIndex;
+wire softwareInterruptSignal, IfSoftwareInterruptSignal;
+wire [3:0] softwareInterruptIndex, IfSoftwareInterruptIndex;
 //wire [15:0] interruptPC;
 wire [15:0] normalNextPC;
 wire [15:0] rs, rm;
@@ -101,9 +101,21 @@ instructionDecoder decoder (
   IfIR,
   registerS, registerM, IdRegisterT,
   jumpControl,
-  softwareInterruptSignal,
-  softwareInterruptIndex,
+  IfSoftwareInterruptSignal,
+  IfSoftwareInterruptIndex,
   eret
+);
+
+forwarder1bit softwareInterruptSignalforward (
+  clk, rst,
+  IfSoftwareInterruptSignal,
+  softwareInterruptSignal
+);
+
+forwarder4bit IfsoftwareInterruptIndexforward (
+  clk, rst,
+  IfSoftwareInterruptIndex,
+  softwareInterruptIndex
 );
 
 forwarder IfPCforward (

@@ -57,7 +57,7 @@ begin
           interruptPC = {12'h000, interruptIndex * 4};
 			 interruptIR = 16'h0800;
           returnPC = currentPC;
-          returnIR = currentIR;
+			 returnIR = currentIR;
           interruptEnable = 1;
         end
         else if (!clear)
