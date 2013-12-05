@@ -175,7 +175,7 @@ forwarder MeAaddrResultforward (
 alu calculator (
   clk, rst,
   rs, rm,
-  IdPC, IdIR,
+  IfPC, IdIR,
   ExCalResult,
   tWriteEnable, tToWrite
 );

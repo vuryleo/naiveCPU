@@ -66,11 +66,9 @@ nop
 
 print:
 sw_sp r4 0
-li r4 f0
-sll r4 r4 2
+li r4 80
+sll r4 r4 0
 addu r2 r4 r4
-sll r4 r4 4
-addu r3 r4 r4
 sw r4 r1 0
 lw_sp r4 0
 jrra

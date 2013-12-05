@@ -54,26 +54,26 @@ registerRenderer renderMeCalResult (
   hit
 );
 
-DigitRenderer renderRegisterS (
-  x, y,
-  400, 180,
-  registerS,
-  hit
-);
+//DigitRenderer renderRegisterS (
+//  x, y,
+//  400, 180,
+//  registerS,
+//  hit
+//);
 
-DigitRenderer renderRegisterM (
-  x, y,
-  500, 180,
-  registerM,
-  hit
-);
+//DigitRenderer renderRegisterM (
+//  x, y,
+//  500, 180,
+//  registerM,
+//  hit
+//);
 
-DigitRenderer renderRegisterIdT (
-  x, y,
-  600, 180,
-  IdRegisterT,
-  hit
-);
+//DigitRenderer renderRegisterIdT (
+//  x, y,
+//  600, 180,
+//  IdRegisterT,
+//  hit
+//);
 
 DigitRenderer renderRegisterMeT (
   x, y,
@@ -81,6 +81,15 @@ DigitRenderer renderRegisterMeT (
   MeRegisterT,
   hit
 );
+
+DigitRenderer memRenderer (
+  x, y,
+  600, 500,
+  ascii,
+  hit
+);
+
+assign readIndex = 13'b000000000000;
 
 //MemRenderer memRenderer (
 //  x, y,

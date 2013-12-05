@@ -112,12 +112,12 @@ romController rom (
   romBdataRead
 );
 
-//GraphicMemory graphicMem (
-//  renderIndex,
-//  actualGraphicMemory,
-//  MeMemResult[7:0],
-//  renderAscii
-//);
+GraphicMemory graphicMem (
+  renderIndex,
+  actualGraphicMemory,
+  MeMemResult[7:0],
+  renderAscii
+);
 
 keyboard fakeKeyboard (
   clkHand, rst,
