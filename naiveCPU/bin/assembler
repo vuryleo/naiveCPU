@@ -327,24 +327,26 @@ class Compiler < Parslet::Transform
   }
 
   rule(condition: subtree(:condition), then_: subtree(:then_), elif: subtree(:elif), else_: subtree(:else_)) {
-    src = condition[:src][:reg].to_i
-    dst = condition[:dst]
+    bs = [{condition: condition, elif: then_.flatten}] + elif
+    ret = []
+    els = else_ ? else_[:elif].flatten : []
+    bottom_off = bs.map{|b| b[:elif].flatten.size * 2 + 12 }.inject(-2, :+) + els.size
+    bottom_off += els.size
 
-    el = elif
-    el += [else_] if else_
-    off = then_.flatten.size * 2 + (el.empty? ? 2 : 6)
-    ret = condition_wrapper(src, condition[:op].to_s, dst, off) + then_
-
-    bottom_off = el.map{|x| x[:elif].size * 2 + (x[:condition] ? 12 : 0) }.inject(2, :+) - (else_ ? 0 : 4)
-    until el.empty?
-      ret += [assemble("b #{bottom_off.to_s 16}"), assemble('nop')]
-      e = el.shift
-      if e[:condition]
-        ret += condition_wrapper(e[:condition][:src][:reg].to_i, e[:condition][:op].to_s, e[:condition][:dst], e[:elif].flatten.size * 2 + (el.empty? ? 2 : 6)) + e[:elif]
-      else
-        ret += e[:elif]
+    until bs.empty?
+      b = bs.shift
+      bb = b[:elif].flatten
+      ret += condition_wrapper(b[:condition][:src][:reg].to_i, b[:condition][:op].to_s, b[:condition][:dst],
+                               bb.size * 2 + (bs.empty? ? 2 : 6))
+      ret += bb
+      bottom_off -= bb.size * 2 + 12
+      unless bs.empty?
+        ret += [assemble("b #{bottom_off.to_s 16}"), assemble('nop')]
       end
-      bottom_off -= e[:elif].size * 2 + (e[:condition] ? 12 : 0)
+    end
+
+    if else_
+      ret += els
     end
     ret
   }
@@ -369,14 +371,14 @@ class Assembler
         stmt.delete :label
       end
       if stmt[:condition]
-        incr 4
-        address stmt[:then_]
-        stmt[:elif].each do |elif|
-          incr 6
-          address elif[:elif]
+        ([stmt[:then_]] + stmt[:elif].map{|b| b[:elif]}).each_with_index do |b,i|
+          incr 4
+          address b
+          if i < stmt[:elif].size
+            incr 2
+          end
         end
         if stmt[:else_]
-          incr 2
           address stmt[:else_][:elif]
         end
       else
@@ -391,20 +393,20 @@ class Assembler
       stmt.each(&method(:relabel))
     when Hash
       if stmt[:condition]
-        incr 4
-        relabel stmt[:then_]
-        stmt[:elif].each do |elif|
-          incr 6
-          relabel elif[:elif]
+        ([stmt[:then_]] + stmt[:elif].map{|b| b[:elif]}).each_with_index do |b,i|
+          incr 4
+          relabel b
+          if i < stmt[:elif].size
+            incr 2
+          end
         end
         if stmt[:else_]
-          incr 2
           relabel stmt[:else_][:elif]
         end
       else
         jump = stmt[:inst][:jump]
         if jump.is_a?(Hash)
-          unless pc = @labels[jump[:label].to_s] 
+          unless pc = @labels[jump[:label].to_s]
             STDERR.puts "label not found #{jump[:label]}"
             abort
           end
@@ -439,10 +441,7 @@ class Assembler
 
     # transform
     $disassembly = {}
-    precode = Compiler.new.apply(stmts).flatten
-
-    # transform
-    precode
+    Compiler.new.apply(stmts).flatten
   end
 
   def [] filename
