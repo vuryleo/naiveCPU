@@ -40,12 +40,12 @@ IFRenderer ifResgisters (
   hit
 );
 
-registerRenderer renderExCalResult (
-  x, y,
-  500, 240,
-  4'hE, ExCalResult,
-  hit
-);
+//registerRenderer renderExCalResult (
+//  x, y,
+//  500, 240,
+//  4'hE, ExCalResult,
+//  hit
+//);
 
 registerRenderer renderMeCalResult (
   x, y,
