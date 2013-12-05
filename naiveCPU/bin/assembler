@@ -324,7 +324,7 @@ class Compiler < Parslet::Transform
   }
 
   rule(condition: subtree(:condition), then_: subtree(:then_), elif: subtree(:elif), else_: subtree(:else_)) {
-    bs = [{condition: condition, elif: then_.flatten}] + elif
+    bs = [{condition: condition, elif: then_}] + elif
     ret = []
     els = else_ ? else_[:elif].flatten : []
     bottom_off = bs.map{|b| b[:elif].flatten.size * 2 + 12 }.inject(-2, :+) + els.size
