@@ -49,10 +49,7 @@ class Parser < Parslet::Parser
 
   rule(:ident) { match('\w').repeat(1) }
 
-  rule(:inst) {
-    x = (xi | xy5 | xyi | xyz2 | x8 | prefix3 | single | int | mtsp | branch).as(:inst)
-    ident.as(:label) >> s? >> str(':') >> lfs? >> x | x
-  }
+  rule(:inst) { (xi | xy5 | xyi | xyz2 | x8 | prefix3 | single | int | mtsp | branch).as(:inst) }
 
   def line x
     str(x) >> lfs
@@ -69,7 +66,7 @@ class Parser < Parslet::Parser
     x >> elif >> (line('.else') >> stmt.repeat.as(:elif)).maybe.as(:else_) >> str('.end')
   }
 
-  rule(:stmt) { (if_ | inst) >> lfs }
+  rule(:stmt) { (ident.as(:label) >> s? >> str(':') >> lfs?).maybe >> (if_ | inst) >> lfs }
   rule(:program) { lfs? >> stmt.repeat }
 
   root :program
