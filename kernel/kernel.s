@@ -56,7 +56,7 @@ lw r2 r1 0
 li r2 0
 readbuf_return:
 lw_sp r3 0
-eret
+jrra
 nop
 
 readbuf_null:
@@ -73,7 +73,7 @@ sll r4 r4 4
 addu r3 r4 r4
 sw r4 r1 0
 lw_sp r4 0
-eret
+jrra
 nop
 
 textedit:
@@ -81,7 +81,10 @@ li r4 0f
 sll r4 r4 0
 li r5 0
 li r6 0
-readchar:int 2
+readchar:
+li r2 8
+jalr r2
+nop
 bnez r2 readchar
 nop
 move r3 r5
@@ -92,7 +95,9 @@ addu r4 r3 r3
 sw r3 r1 0
 move r2 r5
 move r3 r6
-int 3
+li r4 c
+jalr r4
+nop
 cmpi r6 3f
 btnez skipswitchline
 addiu3 r6 r6 1

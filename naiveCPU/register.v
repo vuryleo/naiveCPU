@@ -55,7 +55,7 @@ begin
     registers[7] = 0;
 
     registers[8] = 0;
-    registers[9] = 0;
+    registers[9] = 16'h0200;
     registers[10] = 0;
   end
   else
