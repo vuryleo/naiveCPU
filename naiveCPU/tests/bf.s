@@ -59,6 +59,8 @@ rparen_loop:
 		.end
 	.else
 		b @exit
+		nop
 	.end
 	b @main_loop
 exit:
+	nop
