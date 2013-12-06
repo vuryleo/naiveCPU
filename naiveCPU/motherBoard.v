@@ -1,33 +1,31 @@
 module motherBoard (
-  input clk, rst, clkHand,
+  input clk, rst, clkHand, clkUART,
   inout [15:0] memDataBus,
   output [17:0] memAddrBus,
   output memRead, memWrite, memEnable,
-  input keyDown,
-  input [15:0] inputValue,
   output vgaHs, vgaVs,
   output [2:0] vgaR, vgaG, vgaB,
-  output [15:0] leddebug
+  output [15:0] leddebug,
+  input tbre, tsre, dataReady,    // wires linked with CPLD
+  inout [7:0] ram1DataBus,       // bus
+  output rdn, wrn,
+  output ram1Oe, ram1We, ram1En
 );
 
 wire [175:0] registerValue;
-wire [13:0] actualGraphicMemory;
 wire [15:0] memAaddr, memBaddr, memAdataRead, memBdataRead, MeMemResult;
+wire [7:0] serialPortDataRead;
+wire [3:0] serialPortState;
 wire [1:0] memRW;
 wire [15:0] physicalMemAaddr, physicalMemBaddr;
-wire [15:0] ramAdataRead, ramBdataRead, romAdataRead, romBdataRead;
+wire [15:0] ramAdataRead, ramBdataRead;
 wire [15:0] IfPC, IfIR;
 wire [15:0] ExCalResult, MeCalResult;
-wire hardwareInterruptSignal;
-wire [3:0] hardwareInterruptIndex;
-wire [15:0] keyboardData;
-wire [15:0] interruptPC, interruptIR;
-wire [7:0] renderAscii;
-wire [13:0] renderIndex;
+wire [1:0] index;
 
 wire [3:0] registerS, registerM, IdRegisterT, MeRegisterT;
 
-reg clk25M, clk12M;
+reg clk25M, clk12M, clk6M;
 
 always @ (negedge clk, negedge rst)
 begin
@@ -42,20 +40,24 @@ always @ (negedge clk25M or negedge rst)
     clk12M = 0;
   else
     clk12M = ~ clk12M;
+	 
+always @ (negedge clk12M or negedge rst)
+  if (!rst)
+    clk6M = 0;
+  else
+    clk6M = ~ clk6M;
 
-assign leddebug = {memRW};
+assign leddebug = {MeMemResult, tbre, tsre, wrn, rdn, serialPortState};
 
 cpu naive (
-  clkHand, rst,
+  clkUART, rst,
   memAaddr, memBaddr,
   ExCalResult, MeMemResult, memRW,
   memAdataRead, memBdataRead,
-  hardwareInterruptSignal, hardwareInterruptIndex,
   registerValue,
   IfPC, IfIR,
   registerS, registerM, IdRegisterT, MeRegisterT,
-  MeCalResult,
-  interruptPC, interruptIR
+  MeCalResult
 );
 
 GraphicCard graphic (
@@ -65,35 +67,30 @@ GraphicCard graphic (
   registerS, registerM, IdRegisterT, MeRegisterT,
   ExCalResult, MeCalResult,
   vgaHs, vgaVs,
-  vgaR, vgaG, vgaB,
-  renderAscii,
-  renderIndex
+  vgaR, vgaG, vgaB
 );
 
 memoryMapping mapingA (
   memAaddr,
   physicalMemAaddr,
-  physicalRomAaddr,
-  actualGraphicMemory,
   ramAdataRead,
-  romAdataRead,
-  keyboardData,
-  memAdataRead
+  serialPortDataRead,
+  serialPortState[1:0],
+  memAdataRead,
+  index
 );
 
 memoryMapping mapingB (
   memBaddr,
   physicalMemBaddr,
-  physicalRomBaddr,
-  ,
   ramBdataRead,
-  romBdataRead,
-  keyboardData,
+  serialPortDataRead,
+  serialPortState[1:0],
   memBdataRead
 );
 
 memoryController memory(
-  clkHand,
+  clkUART,
   physicalMemAaddr, MeMemResult,
   memRW,
   ramAdataRead,
@@ -104,29 +101,16 @@ memoryController memory(
   memRead, memWrite, memEnable
 );
 
-romController rom (
-  clkHand,
-  physicalRomAaddr,
-  romAdataRead,
-  physicalRomBaddr,
-  romBdataRead
-);
-
-graphicRam graphicMem (
-  clkHand,
-  memRW == 2'b01,
-  actualGraphicMemory,
-  MeMemResult[7:0],
-  clkHand,
-  renderIndex,
-  renderAscii
-);
-
-keyboard fakeKeyboard (
-  clkHand, rst,
-  keyDown, inputValue,
-  hardwareInterruptSignal, hardwareInterruptIndex,
-  keyboardData
+serial_port uart(
+  clkUART, rst,
+  tbre, tsre, dataReady,
+  memRW, index,
+  MeMemResult,
+  ram1DataBus,
+  rdn, wrn,
+  ram1Oe, ram1We, ram1En,
+  serialPortDataRead,
+  serialPortState
 );
 
 endmodule

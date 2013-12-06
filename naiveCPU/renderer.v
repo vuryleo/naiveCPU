@@ -4,10 +4,7 @@ module Renderer (
   input [15:0] IfPC, IfIR,
   input [3:0] registerS, registerM, IdRegisterT, MeRegisterT,
   input [15:0] ExCalResult, MeCalResult,
-  output reg [2:0] r, g, b,
-  // memory
-  input [7:0] ascii,
-  output [13:0] readIndex
+  output reg [2:0] r, g, b
 );
 
 wor hit;
@@ -40,12 +37,12 @@ IFRenderer ifResgisters (
   hit
 );
 
-//registerRenderer renderExCalResult (
-//  x, y,
-//  500, 240,
-//  4'hE, ExCalResult,
-//  hit
-//);
+registerRenderer renderExCalResult (
+  x, y,
+  500, 240,
+  4'hE, ExCalResult,
+  hit
+);
 
 registerRenderer renderMeCalResult (
   x, y,
@@ -54,26 +51,26 @@ registerRenderer renderMeCalResult (
   hit
 );
 
-//DigitRenderer renderRegisterS (
-//  x, y,
-//  400, 180,
-//  registerS,
-//  hit
-//);
+DigitRenderer renderRegisterS (
+  x, y,
+  400, 180,
+  registerS,
+  hit
+);
 
-//DigitRenderer renderRegisterM (
-//  x, y,
-//  500, 180,
-//  registerM,
-//  hit
-//);
+DigitRenderer renderRegisterM (
+  x, y,
+  500, 180,
+  registerM,
+  hit
+);
 
-//DigitRenderer renderRegisterIdT (
-//  x, y,
-//  600, 180,
-//  IdRegisterT,
-//  hit
-//);
+DigitRenderer renderRegisterIdT (
+  x, y,
+  600, 180,
+  IdRegisterT,
+  hit
+);
 
 DigitRenderer renderRegisterMeT (
   x, y,
@@ -81,21 +78,5 @@ DigitRenderer renderRegisterMeT (
   MeRegisterT,
   hit
 );
-
-DigitRenderer memRenderer (
-  x, y,
-  600, 500,
-  ascii,
-  hit
-);
-
-assign readIndex = 13'b000000000000;
-
-//MemRenderer memRenderer (
-//  x, y,
-//  ascii,
-//  readIndex,
-//  hit
-//);
 
 endmodule

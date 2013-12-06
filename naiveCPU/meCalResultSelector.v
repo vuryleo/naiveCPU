@@ -21,7 +21,7 @@ always @ (negedge clk or negedge rst)
     //MeReadResult = memDataRead;
   end
 
-assign MeCalResult = (MeMemControl == 2'b10)? memDataRead : ExCalResult;
+assign MeCalResult = MeMemControl[1]? memDataRead : ExCalResult;
 
 endmodule
 

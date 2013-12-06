@@ -5,9 +5,7 @@ module GraphicCard (
   input [3:0] registerS, registerM, IdRegisterT, MeRegisterT,
   input [15:0] ExCalResult, MeCalResult,
   output hs, vs,
-  output [2:0] r, g, b,
-  input [7:0] ascii,
-  output [13:0] readIndex
+  output [2:0] r, g, b
 );
 
 wire [10:0] x, y;
@@ -25,9 +23,7 @@ Renderer RendererM (
   IfPC, IfIR,
   registerS, registerM, IdRegisterT, MeRegisterT,
   ExCalResult, MeCalResult,
-  r, g, b,
-  ascii,
-  readIndex
+  r, g, b
 );
 
 endmodule

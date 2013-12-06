@@ -8,7 +8,6 @@ module serial_port(
   output ram1_oe, ram1_we, ram1_en,
   output reg [7:0] led,         // LED displays data received by serial port
   output [7:0] leddebug
-
 );
 
   localparam MODE_WRITE = 2'b00;

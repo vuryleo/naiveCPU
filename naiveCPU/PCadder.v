@@ -5,9 +5,6 @@ module PCadder (
   input [15:0] rs,
   input t,
   input [2:0] jumpControl,
-  input interruptSignal,
-  input [15:0] interruptPC,
-  output [15:0] normalNextPC,
   output [15:0] nextPC
 );
 
@@ -24,13 +21,14 @@ localparam  IDLE = 3'b000,
 reg [15:0] instruction, jumpPC;
 reg jump;
 
-wire[15:0] imm16s = {instruction[7] ? 8'hff : 8'h00, instruction[7:0]};
+wire [15:0] imm16s = {instruction[7] ? 8'hff : 8'h00, instruction[7:0]};
+wire [15:0] imm16sfrom10 = {instruction[10] ? 5'b11111 : 5'b00000, instruction[10:0]};
 
 always @ (negedge clk or negedge rst)
   if (!rst)
   begin
     instruction = 16'h0800;
-	 currentPC = 16'hfffe;
+	 currentPC = 16'hffff;
   end
   else
   begin
@@ -81,14 +79,13 @@ begin
         end
       DB:
         begin
-          jumpPC = currentPC + imm16s;
+          jumpPC = currentPC + imm16sfrom10;
           jump = 1;
         end
     endcase
   end
 end
 
-assign normalNextPC = jump? jumpPC : currentPC + 2;
-assign nextPC = interruptSignal? normalNextPC : interruptPC;
+assign nextPC = jump? jumpPC : currentPC + 1;
 
 endmodule
