@@ -25,7 +25,7 @@ RA ==> "1010"
 Memory Mapping
 --------------
 0000 ~ 7FFF physical memory, so only 31KB of memory is available
-F000 ~ FDFF graphic memory
+8000 ~ 8AFF graphic memory
 FE00 keyboard input
 FF00 ~ FFFF rom
 
@@ -42,7 +42,7 @@ In order to support hardware interrupt, an extra instruction is introduced.
 It is called `eret`. And its binary format is `1000000000000000`, and hexadecimal format is `8000`.
 When executing this instruction, CPU will clear the interrupt signal and reset PC to EPC that stored when interrupt occers.
 
-*Notice* `eret` instruction is a jump instruction, so a delay slot is required.
+*Notice* `eret` instruction is **NOT** a jump instruction, so a delay slot isn't appear.
 
 naiveKernel
 ===========
@@ -52,8 +52,8 @@ Memory
 ------
 0000 ~ 0003 boot instruction *Just a b instruction that point to real program*
 0004 ~ 003f interrupt vector table
-0200 stack bottom
 0400 I/O buffer start
+7FFE stack bottom
 
 Interrupts
 ----------
@@ -63,3 +63,7 @@ Interrupts
 3 -> write to graphic memory
 
 For interrupts' detail, please refer to wiki.
+
+License
+=======
+MIT
