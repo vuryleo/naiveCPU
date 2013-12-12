@@ -6,7 +6,7 @@ Implemented by
 * Ray Song (emacsray@gmail.com)
 * Vury Leo (i@vuryleo.com)
 
-This is a TCHO-MIPS 16bits CPU that assigned as homework of Computer Compose Principle.
+This is a THCO-MIPS 16bits CPU that assigned as homework of Computer Compose Principle.
 
 Protocols
 =========
