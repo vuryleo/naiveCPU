@@ -1,5 +1,5 @@
 % File: intro.tex
-% Date: Fri Dec 13 17:36:18 2013 +0800
+% Date: Fri Dec 13 20:26:08 2013 +0800
 % Author: Yuxin Wu <ppwwyyxxc@gmail.com>
 
 \section{实验目的}
@@ -34,36 +34,39 @@
   \item 显卡 \verb|graphicCard.v|: 渲染CPU内部信号状态,方便调试.
 \end{enumerate}
 
-\subsection{CPU模块设计}
-  \subsubsection{IF模块}
+CPU部分模块细分为如下几个部分:
+
+  \subsection{IF模块}
     本模块主要功能是从存储设备中读取一条指令.
     接受一个PC值做为输入,在前半周期读取其对应的IR,在后半周期将其写入输出IR.
-  \subsubsection{ID模块}
+  \subsection{ID模块}
     本模块是进行指令的译码,输入为IF阶段读出的指令,输出为三个操作寄存器编号与跳转控制信号.
     前半周期会将IF模块输出的IR缓存,后半周期根据其值输出三个寄存器编号(源寄存器,辅助寄存器与目标寄存器).
     特别注意的是同时会输出跳转控制信号来表明是该指令是否是跳转指令以及其类型.
     源寄存器(register S)同时也被做为跳转判断所需的非T寄存器,辅助寄存器(register M)做为第二操作数或者内存地址基准,目标寄存器(register T)是写回的寄存器编号.
     该阶段能够解析THCO-MIPS指令集的全部44条CPU指令与自己添加的eret指令,见\verb|instructDecoder.v|.
-  \subsubsection{EX模块}
+  \subsection{EX模块}
     EX模块有ALU与内存地址计算两个子模块.
     ALU子模块将根据转发的指令自己译码,仅接受实际运算型指令,会根据旁路选择出的实际寄存器数据与译码出的立即数进行运算,同时设置T寄存器.
     此外,还将进行内存地址计算,该子模块自己译码,仅接受访存型指令,会根据旁路选择的内存地址基准和译码出的立即数计算出操作内存地址,同时还将输出内存的控制信号.
-  \subsubsection{ME模块}
+  \subsection{ME模块}
     本模块读入EX模块输出的内存控制信号,进行实际的读入写出操作.该阶段还将从内存读出与EX转发的计算结果中选择一个做为ME阶段的结果输出.
-  \subsubsection{WB模块}
+  \subsection{WB模块}
     本模块没有单独分模块而是寄存器堆的一部分,将接受一路转发的目标寄存器(register T)的编号与ME模块输出的计算结果,在前半周期进行写入操作.
 
-  \subsubsection{转发器}
+  \subsection{转发器}
     有很多数据在不同模块中均要使用,而且很多很杂.所以设计了转发器,其功能非常单一,即在前半周期读入缓存,后半周期用缓存更新输出.
     根据需要设计了16,4,2和1位的转发器供不同大小的信号使用.实现中共复用8次,节省了大量代码,是核心代码中复用次数最多的模块.
-  \subsubsection{PC计算器}
+  \subsection{PC计算器}
     PC是程序流控制的关键数据,对其修改的方式非常多样,所以专门设计了PC计算器来计算下一个PC值.
     其将接受现在的PC值,跳转指令计算的跳转PC值与中断处理器提供的中断PC,并从中选择一个做为下一个PC值.
     特别的是其将输出一个不考虑中断的情况下的下一个PC做为中断处理后的返回PC值交给中断处理器存储.
-  \subsubsection{寄存器堆}
+  \subsection{寄存器堆}
     提供了通用及特殊寄存器的两个读端口和一个写端口,以及T寄存器的一个读端口和一个写端口.
     对通用/特殊寄存器的写入发生在前半周期,以保证译码阶段能够读出正确的寄存器值.
     对T寄存器的写如发生在EX模块拉低T写入使能端时,以保证T寄存器的值为最新.
+
+\section{实现细节及扩展}
 
 \subsection{读写分离}
 由于每个阶段的输入均是上一阶段的结果,然而在流水作业中,可能某阶段先修改了输出,后一阶段才使用其做为输入.
@@ -108,36 +111,21 @@ CPU可能会访问不同的设备,但是不可能为每一个设备定一条CPU�
 \subsection{汇编器}
 在调试中为了测试更多的代码需要写一些复杂的程序.
 而给出的汇编器仅仅对汇编指令做了机械的翻译,因此我们用ruby实现了一个支持伪指令的汇编器,见\verb|bin/assembler|.
-可以将伪指令如if, else等翻译成CPU指令,语法上也更优美, 减少了编写复杂程序出现的bug的机会. 例如它可以支持如下程序:
+它可以将伪指令如if, else等翻译成等价汇编代码后在转为机器码,语法上也做了优化, 减少了编写复杂程序出现的bug的机会. 例如它可以支持如下语法的程序
+(见\verb|tests/*.s|):
 \begin{lstlisting}
-  main_loop:
-  lw r5 r6 0                            # r5 = pos
-  lw r4 r7 0                            # r4 = cell[pos]
-  li r2 0                               # row of next character
-  li r3 0                               # column of next character
-  .if r5 == '+'
-  addiu r4 1
-  sw r7 r4 0
-  .elif r5 == '-'
-  addiu r4 -1
-  sw r7 r4 0
-  .elif r5 == '<'
-  addiu r7 -1
-  .elif r5 == '>'
-  addiu r7 1
-  .elif r5 == '.'
-  move r1 r4
-  int 3
-  addiu r3 1
-  .if r3 == 64
-  addiu r2 1
-  li r3 0
-  .end
-  .elif r5 == ','
-  # TODO
-  .elif r5 == '['
-  .if r4 == 0
-  xor r3 r3             # number of unmatched parentheses
+    .if r4 == 0
+      xor r3 r3             # number of unmatched parentheses
+lparen_loop:
+      lw r4 r7 0
+      .if r4 == '['
+        addiu r3 1
+      .elif r4 == ']'
+        addiu r3 -1
+      .end
+      addiu r7 1
+      bnez r3 @lparen_loop
+    .end
 \end{lstlisting}
 \section{实验结果}
 最终实现的版本有两个.
@@ -147,11 +135,11 @@ CPU可能会访问不同的设备,但是不可能为每一个设备定一条CPU�
 基础分支实现了串口,能够正确高效地与监控程序进行通信,可以运行自己汇编编写的程序,实现了实验的基本要求.
 \begin{figure}[H]
   \centering
-  \includegraphics[width=\textwidth]{figure/result.png}
+  \includegraphics[width=0.8\textwidth]{figure/result.png}
 \end{figure}
 
 
-\section{问题及解决}
+\section{主要问题及解决}
 此次实验中出现了很多问题,最后大多得以解决.
 \subsection{中断}
 由于设计时未想清楚,将硬中断当作跳转指令处理,而没有考虑插入时读入了一个跳转指令,导致程序出现不稳定错误.
@@ -185,4 +173,4 @@ master分支实现了PS/2键盘和软硬中断以及显存的原型,而basic分�
 
 \subsection{致谢}
 计原实验的艰苦又快乐的一个月里, 我们都收获良多.
-感谢刘卫东, 李山山老师及关孟翔助教在实验中给予的支持和帮助!
+感谢刘卫东, 李山山老师及各位助教在实验中给予的支持和帮助!
