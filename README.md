@@ -1,12 +1,12 @@
 naiveCPU
 ========
-Implemented by
+This is a THCO-MIPS 16bits CPU implemented in Verilog, served as the course project in *Computer Organization (2013Fall)* in Tsinghua University.
+
+Authors:
 
 * ppwwyyxx (ppwwyyxxc@gmail.com)
 * Ray Song (emacsray@gmail.com)
 * Vury Leo (i@vuryleo.com)
-
-This is a THCO-MIPS 16bits CPU that assigned as homework of Computer Compose Principle.
 
 Protocols
 =========
